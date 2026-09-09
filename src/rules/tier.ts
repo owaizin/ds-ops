@@ -37,14 +37,13 @@ function isAllowedReference(from: Tier, to: Tier): boolean {
 }
 
 /**
- * Design values are stacked in three levels: raw values (the paint cans) →
- * named jobs (the labels) → part rules (this button). Each level should only
- * reach one level down. When a part rule reaches past its label straight to a
- * paint can, the color is right but a re-theme or rebrand will not reach it.
+ * A token references the wrong tier: skips a tier (component → primitive),
+ * or points upward (semantic → component). Breaks theme propagation and
+ * rebrand — the value is right but the contract is broken.
  */
 export const tierLeakageRule: Rule = {
   id: 'token/tier-leakage',
-  title: 'A part rule skips its label and grabs a raw value directly',
+  title: 'Token references across tiers in the wrong direction',
   targets: ['tokens', 'color', 'spacing', 'typography', 'elevation', 'motion'],
   run(ctx: RuleContext): Finding[] {
     const refs = ctx.values.filter((v) => v.provenance.classification === 'reference' && v.refs);
@@ -70,12 +69,12 @@ export const tierLeakageRule: Rule = {
       {
         ruleId: this.id,
         severity: 'high',
-        summary: `${leaks.length} place(s) where a value reaches to the wrong level${skips.length ? ` (${skips.length} part rules grab a raw value directly, skipping the label)` : ''}`,
+        summary: `${leaks.length} cross-tier reference(s) break the downward-only rule${skips.length ? ` (${skips.length} component → primitive tier skips)` : ''}`,
         where: leaks
           .slice(0, 8)
-          .map((l) => `${l.token} (${l.tier}) → ${l.target} (${l.targetTier}) at ${l.where}`)
+          .map((l) => `${l.token} [${l.tier}] → ${l.target} [${l.targetTier}] (${l.where})`)
           .join('; '),
-        fix: 'Make each part rule point at a named job, and each named job point at a raw value. If no named job fits, add one. Why it matters: when the client rebrands, the new colors flow through the named jobs. Anything wired straight to a raw value gets left on the old brand.',
+        fix: 'Route through the tier below: a component token references a semantic token, a semantic token references a primitive. Add the missing semantic token if none fits.',
         data: { count: leaks.length, tierSkips: skips.length, leaks: leaks.slice(0, 40) },
       },
     ];
@@ -83,14 +82,13 @@ export const tierLeakageRule: Rule = {
 };
 
 /**
- * A "named job" color is named for how it looks (`action-blue`) instead of what
- * it is for (`action-primary`). Then the day the button turns green, the name
- * is a lie. The colored-name is only right on category / chart tokens, where the
- * color IS the meaning.
+ * A semantic token whose name encodes appearance (a colour name, a size word,
+ * a generic qualifier) rather than intent. `color.action.blue` is a primitive
+ * with extra steps.
  */
 export const semanticAppearanceNameRule: Rule = {
   id: 'token/semantic-name-describes-appearance',
-  title: 'A named color is named for how it looks, not what it is for',
+  title: 'Semantic token name encodes appearance, not intent',
   targets: ['tokens', 'color'],
   run(ctx: RuleContext): Finding[] {
     const reserved = ctx.config.taxonomy.reservedSemanticTerms.map((t) => t.toLowerCase());
@@ -113,14 +111,14 @@ export const semanticAppearanceNameRule: Rule = {
       {
         ruleId: this.id,
         severity: categoryOnly ? 'low' : 'medium',
-        summary: `${hits.length} named color(s) have a color word baked into the name`,
+        summary: `${hits.length} semantic token(s) carry an appearance term in the name`,
         where: hits
           .slice(0, 8)
-          .map((h) => `${h.token} (has "${h.term}")${h.category ? ' — chart/category color, OK' : ''}`)
+          .map((h) => `${h.token} (${h.term})${h.category ? ' — category token' : ''}`)
           .join('; '),
         fix: categoryOnly
-          ? 'These are all chart/category colors, where the color IS the point — this is fine. Write it down in DESIGN-SYSTEM.md so the tool stops flagging it.'
-          : 'Rename to say what the color is for, not what it looks like: `color-action-primary`, not `color-action-blue`. Why it matters: the day design changes that button to green, the name still says blue and every reader is misled.',
+          ? 'Category / chart-series tokens are a common sanctioned exception — the colour name IS the identity. Record this deviation in DESIGN-SYSTEM.md so it is not re-flagged.'
+          : 'Rename to describe intent (color.action.primary, not color.action.blue). Keep the colour name only on category / chart-series tokens.',
         data: { hits },
       },
     ];

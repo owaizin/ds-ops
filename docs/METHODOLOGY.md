@@ -9,10 +9,10 @@
 
 The one-sentence thesis:
 
-> A design system is not a box of parts. It is a set of rules that produces the
-> parts. Fix the rules first: the shared values before the components, the
-> low-level values before the patterns, the system before any single screen.
-> Every change — human-written or AI-generated — goes through the same checks.
+> A design system is not a component library. It is a decision framework that
+> happens to ship components. Tokens before components. Primitives before
+> patterns. Systems before screens. Every design choice, every PR, and every
+> AI-generated output passes through the same gates.
 
 ## Relationship to `design-system-ops` (Murphy Trueman)
 

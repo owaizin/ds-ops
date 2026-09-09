@@ -61,5 +61,5 @@ test('literal-duplicate-tokens groups tokens that share a value', () => {
   ];
   const findings = literalDuplicateRule.run(ctx(colors));
   assert.equal(findings.length, 1);
-  assert.match(findings[0]?.summary ?? '', /1 color value\(s\) are written out under 3 different names/);
+  assert.match(findings[0]?.summary ?? '', /1 colour value\(s\) are declared by 3/);
 });

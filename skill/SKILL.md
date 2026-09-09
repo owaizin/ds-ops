@@ -5,18 +5,14 @@ metadata:
   version: 0.1.0
 ---
 
-**In plain terms:** a design system is a shared box of colors, spacing, and parts
-that a whole app is built from. Over time people stop using the shared box and
-paste in their own — four kinds of blue, nothing lines up. ds-ops finds that mess
-with math (deterministic checks, no guessing), and helps rebuild the box.
-
-ds-ops treats a design system as **a set of rules that happens to ship
+ds-ops treats a design system as **a decision framework that happens to ship
 components**, not a component library. Its job is to remove decisions — every rule
-here is a check a computer can run, a file it can generate, or a question the
-author answers, never a reviewer's memory.
+here is a deterministic check, a scaffold, or a question the author answers, never
+a reviewer's memory.
 
-Scope line: **impeccable makes one screen look good; ds-ops checks the shared
-system behind all the screens.** If the request is "make this page look better",
+Scope line: **impeccable operates on screens; ds-ops operates on the system behind
+them.** A shop runs impeccable to make a surface good and ds-ops to make sure a
+system exists and does not rot. If the request is "make this page look better",
 hand it to impeccable.
 
 ## Setup
@@ -30,24 +26,20 @@ hand it to impeccable.
    `reference/scope.md` — the branch-scope policy. Audit findings never override
    scope.
 
-## The three levels (the spine)
-
-Design values stack in three levels. Think paint:
+## The layer model (the spine)
 
 ```
-Palette (raw)  →  Semantic (named job)  →  Component (part rule)
-"blue 600"        "primary action color"     "button background"
-the paint cans    labels on the cans         "this part uses that label"
+Palette   →   Semantic   →   Component   →   State
+(raw)         (role)         (part)          (interaction)
 ```
 
-The rule: each level points **one level down, never up, never skipping**. A named
-job points at a paint can. A part rule points at a named job — not straight at a
-paint can. When a part rule grabs a paint can directly, the color is right today
-but a rebrand won't reach it, because rebrands flow through the labels.
+Each layer references only the layer above it, via `var()`. A semantic token
+holding a raw literal is a bug. A component reading a palette token directly is a
+bug. Both are grep-checkable and both are ds-ops rules.
 
-Two files hold the truth: `tokens.css` (what the app runs) and `tokens.json`
-(DTCG 2025.10 format — what design tools and exporters read). CI checks they match
-on every change. They move together or not at all.
+Two files, one source of truth: `tokens.css` (the runtime) and `tokens.json`
+(W3C design-tokens format — what every other tool reads). A CI check diffs them
+per namespace on every PR. They change together or neither changes.
 
 ## Commands
 
@@ -77,32 +69,34 @@ Routing:
 - **Missing `DESIGN-SYSTEM.md`:** a system-level request routes through `discover`
   first. A narrow single-component request may proceed, offering `discover` after.
 
-## Two kinds of check
+## What is deterministic vs what is judgment
 
-- **Math checks** (the CLI: `audit` / `sweep` / `drift`): wrong-level references,
-  hand-typed colors, exact duplicates, colors too close to tell apart, mixed
-  formats, the palette test, the two files matching, the standard component files
-  existing. Same answer every time, no AI. In `guard` these **block the merge**.
-- **Judgment checks** (the playbooks: `shape`, `review`, `census`): is this
-  component's option list too long, did the author cut anything, is a near-
-  duplicate deliberate, is the component even needed. In `guard` these **leave a
-  comment**, never block — one wrong block and someone turns the whole check off.
+- **Deterministic** (the CLI, `audit` / `sweep` / `drift`): token-layer violations,
+  raw-value counts, literal duplicates, near-duplicate primitives, storage-form
+  consistency, the ΔE plateau test, CSS/JSON parity, the 5-file contract. These
+  run with no LLM and no API key. In `guard`, they **block**.
+- **Judgment** (the skill playbooks: `shape`, `review`, `census`): API-surface
+  restraint, "did the author name what they cut", whether a near-duplicate is a
+  deliberate ramp step, whether a component is really needed. In `guard`, these
+  **comment**, never block — a false positive that blocks a merge gets the whole
+  check disabled.
 
-## Keep component option-lists short
+## The restraint doctrine
 
-Start skeptical of every new option. Per component, counting only options it adds:
+Default stance: skeptical of additions. API-surface caps, per component's *added*
+public API — soft cap = justify in writing, hard cap = fails review:
 
-| kind of option | "explain yourself" past | "no" past |
+| Dimension | Soft | Hard |
 |---|---|---|
-| props | 12 | 18 |
-| style variants | 4 | 6 |
-| sizes | 4 | 5 |
-| color/tone choices | 6 | 8 |
-| true/false flags | 5 | 8 |
+| Props | > 12 | > 18 |
+| `variant` | > 4 | > 6 |
+| `size` | > 4 | > 5 |
+| `tone` / `color` | > 6 | > 8 |
+| Boolean flags | > 5 | > 8 |
 
-Lots of true/false flags usually means a missing variant. An option with no real
-use anywhere → delete it. If the author can't name one thing they left out, the
-design isn't done.
+Many booleans = a missing variant. A "just in case" prop with no usage site →
+delete it. If the author cannot name one thing they cut, the design is not
+finished.
 
 ## NEVER
 

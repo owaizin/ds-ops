@@ -104,38 +104,39 @@ export function sweep(fixtureDir: string, opts: { outDir?: string; config?: DsOp
 }
 
 function printReport(r: SweepResult): void {
-  console.log(`\n  Color palette check — ${r.manifest.fixtureLabel}`);
-  console.log(`  We blur the colors together, a little more each row, and count how many are left.\n`);
-  console.log(`  ${r.distinctLiterals} different colors to start`);
-  if (r.shippedPrimitiveCount != null) {
-    console.log(`  the team says their palette has ${r.shippedPrimitiveCount} colors`);
-  }
+  console.log(`\n  ds-ops sweep — ${r.manifest.fixtureLabel}`);
+  console.log(
+    `  fixture ${r.manifest.fixtureSha}   adapter ${r.manifest.adapter}   config ${r.manifest.configHash}\n`,
+  );
+  console.log(`  ${r.distinctLiterals} distinct color literals`);
+  if (r.shippedPrimitiveCount != null) console.log(`  humans shipped ${r.shippedPrimitiveCount} primitives`);
   console.log('');
 
   const maxC = Math.max(...r.curve.map((p) => p.clusters));
   const inIntent = (d: number) =>
     r.intentPlateau != null && d >= r.intentPlateau.from && d <= r.intentPlateau.to;
-  console.log('  blur   colors left');
   for (const p of r.curve) {
     const bar = '█'.repeat(Math.round((p.clusters / maxC) * 40));
-    const mark = inIntent(p.deltaE) ? '  <- holds steady here' : '';
-    console.log(`  ${p.deltaE.toFixed(2).padStart(5)}  ${String(p.clusters).padStart(3)}  ${bar}${mark}`);
+    const mark = inIntent(p.deltaE) ? '  <- intent plateau' : '';
+    console.log(`  ΔE ${p.deltaE.toFixed(2).padStart(6)}  ${String(p.clusters).padStart(3)}  ${bar}${mark}`);
   }
 
   console.log('');
   console.log(
-    r.monotoneNonIncreasing
-      ? '  The count only ever goes down as we blur harder — good, the method works on this palette.'
-      : '  The count jumps around instead of only going down — this test is not reliable on this palette.',
+    `  monotone non-increasing: ${r.monotoneNonIncreasing ? 'yes' : 'NO — ΔE is not a sane merge metric here'}`,
   );
-  if (r.plateaus.length) {
-    console.log(`  Stretches where the count holds steady: ${r.plateaus.length}`);
-    for (const p of r.plateaus) {
-      console.log(`    ${p.clusters} colors, from blur ${p.from} to ${p.to}`);
-    }
+  console.log(`  plateaus (width > 1 step): ${r.plateaus.length}`);
+  for (const p of r.plateaus)
+    console.log(
+      `    ${String(p.clusters).padStart(3)} clusters  ΔE ${p.from}–${p.to}  (width ${p.width.toFixed(2)})`,
+    );
+  if (r.shippedRecoverableUpTo != null) {
+    console.log(
+      `  shipped count of ${r.shippedPrimitiveCount} still resolves up to ΔE ${r.shippedRecoverableUpTo}`,
+    );
   }
   console.log('');
-  console.log(`  What this tells us: ${r.verdict}`);
+  console.log(`  verdict: ${r.verdict}`);
   console.log('');
 }
 
@@ -212,16 +213,16 @@ function readCurve(x: {
   max: number;
 }): string {
   if (!x.monotone)
-    return "the count jumps around as we blur, so this test can't say anything reliable about this palette. Likely the same color is being counted twice, or the colors don't sit on a clean scale.";
+    return 'curve is not monotone — clustering is unstable on this palette; ΔE is the wrong metric here or the extractor is double-counting.';
   if (x.shipped == null)
-    return `the count drops smoothly from ${x.plateaus.length ? 'a few steady stretches' : 'no steady stretch'} down. We don't know how many colors the team meant to have, so there's nothing to check it against — just record it.`;
+    return `monotone collapse from the literal count down. ${x.plateaus.length} plateau(s). No ground truth to locate a cutoff — record and move on.`;
   if (x.intentPlateau) {
-    return `the tool's count matches the ${x.shipped} colors the team says they have, and it stays matched across a range of blur (${x.intentPlateau.from} to ${x.intentPlateau.to}). That's the fingerprint of a palette someone picked by hand. Healthy.`;
+    return `the machine's palette agrees with the ${x.shipped} humans shipped across ΔE ${x.intentPlateau.from}–${x.intentPlateau.to}: that band is the defensible cutoff for this source.`;
   }
   if (x.shippedRecoverableUpTo != null && x.shippedRecoverableUpTo <= x.min + 1e-9) {
-    return `the ${x.shipped}-color palette only holds at almost zero blur. Any blur at all and colors start merging. The colors sit closer together than the eye can follow — either a tool generated the scale, or some steps are too fine to see.`;
+    return `no knee at the human count. The ${x.shipped}-entry palette only survives at ΔE ${x.min} (the sweep floor) — every step above that merges neighbours. This palette is built perceptually tighter than one JND; the human number is a design choice the metric cannot recover.`;
   }
-  return `the count passes through ${x.shipped} (near blur ${x.shippedRecoverableUpTo}) but doesn't pause there. The palette has no natural resting point at the number the team says they have.`;
+  return `no plateau sits at the ${x.shipped} humans shipped. The count passes through ${x.shipped} near ΔE ${x.shippedRecoverableUpTo} without holding — the palette has no natural knee there.`;
 }
 
 function dedupeByRaw(values: { raw: string; provenance: { tokenName: string | null } }[]): ColorPoint[] {
