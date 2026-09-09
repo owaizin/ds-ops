@@ -1,0 +1,35 @@
+{
+  "name": "ds-ops",
+  "version": "0.1.0",
+  "description": "design-system-ops — audit, scaffold, and guardrail a design system from its code",
+  "type": "module",
+  "bin": {
+    "ds-ops": "./src/cli.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src", "README.md", "LICENSE"],
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "ds-ops": "node --experimental-strip-types src/cli.ts",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "type-check": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test 'test/**/*.test.ts'"
+  },
+  "keywords": ["design-system", "design-tokens", "storybook", "audit", "governance", "ciede2000"],
+  "license": "MIT",
+  "author": "owaizin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/owaizin/ds-ops.git"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.9.0",
+    "typescript": "^5.6.3"
+  }
+}

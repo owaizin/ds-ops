@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run check
+      - run: npm run type-check
+      - run: npm test
+
+  sweep-fixtures:
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: run the ΔE sweep on every public fixture
+        run: |
+          for d in fixtures/*/; do
+            [ -f "$d/SOURCE.json" ] || continue
+            node --experimental-strip-types src/cli.ts sweep "$d"
+          done

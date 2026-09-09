@@ -1,0 +1,10 @@
+{
+  "label": "Radix Colors",
+  "upstream": "https://github.com/radix-ui/colors",
+  "fixtureSha": "npm:@radix-ui/colors@3.0.0",
+  "tarballSha256": "f6cec1ff1fcc58a45eeefc25d0e6aa1f1659845dbd198963617a86e43d21f3d1",
+  "retrievedAt": "2026-09-09",
+  "path": "css",
+  "shippedPrimitiveCount": 72,
+  "notes": "The healthy control. 6 light base scales (slate, blue, red, green, amber, plum) x 12 deliberately-even steps = 72 swatches, zero intentional duplicates. p3 @supports overrides are present in source and are skipped by the css-custom-props adapter (color(display-p3 ...) is not a recognised color form). Expect a long clean plateau at ~72 then a monotone collapse: this fixture exists to show the ΔE metric is well-behaved on a well-governed palette. Only the 6 light non-alpha scales were vendored to keep the snapshot legible; dark/alpha/other scales omitted."
+}
