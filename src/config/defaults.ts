@@ -19,6 +19,9 @@ export const DEFAULT_CONFIG: DsOpsConfig = {
     shadowTokenHints: ['shadow', 'elevation', 'glow', 'ring-offset'],
     shadowAlphaCeiling: 0.25,
     nonColorTokenHints: ['gradient', 'backdrop', 'scrim-opacity'],
+    // `raw`/`palette`/`scale`/`ref` anywhere, OR a trailing numeric scale step
+    // (--slate-500, --amber-9). Covers Tailwind, Radix, and Cone conventions.
+    primitivePattern: '(^|-)(raw|palette|scale|ref)(-|$)|-\\d{1,4}$',
   },
   sweep: {
     min: 0.5,

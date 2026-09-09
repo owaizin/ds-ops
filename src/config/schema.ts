@@ -27,6 +27,13 @@ export type DsOpsConfig = {
     shadowAlphaCeiling: number;
     /** token-name substrings that mark a value as a sanctioned non-color (excluded, not ambiguous) */
     nonColorTokenHints: string[];
+    /**
+     * RegExp source (case-insensitive) matching a PRIMITIVE token name — a raw
+     * palette entry or numbered scale step. Anything not matching is treated as
+     * a semantic token and is expected to be a var() reference, not a literal.
+     * This is a judgment call about the target's convention; override per source.
+     */
+    primitivePattern: string;
   };
   sweep: {
     min: number;

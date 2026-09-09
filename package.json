@@ -9,7 +9,7 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "files": ["src", "README.md", "LICENSE"],
+  "files": ["src", "skill", "README.md", "LICENSE"],
   "engines": {
     "node": ">=22.6"
   },

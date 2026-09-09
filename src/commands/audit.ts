@@ -1,0 +1,126 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { cssCustomPropsAdapter } from '../adapters/css-custom-props.ts';
+import type { Adapter } from '../adapters/types.ts';
+import { DEFAULT_CONFIG } from '../config/defaults.ts';
+import type { DsOpsConfig } from '../config/schema.ts';
+import { hashConfig } from '../config/schema.ts';
+import { loadFixture } from '../core/fixture.ts';
+import { rulesForTarget } from '../rules/registry.ts';
+import { type Finding, type RuleTarget, SEVERITY_ORDER } from '../rules/types.ts';
+
+const ADAPTERS: Adapter[] = [cssCustomPropsAdapter];
+
+export type AuditReport = {
+  manifest: {
+    tool: 'ds-ops';
+    command: 'audit';
+    target: string;
+    fixtureLabel: string;
+    fixtureSha: string;
+    adapter: string;
+    configHash: string;
+    ranAt: string;
+  };
+  rulesRun: string[];
+  findings: Finding[];
+  /** ratios, not counts — a scorecard row that survives codebase growth */
+  ratios: Record<string, number>;
+  verdict: 'clean' | 'issues';
+};
+
+/**
+ * One-shot deterministic audit. Runs every rule that speaks to `target`,
+ * returns severity-ranked findings + scorecard ratios. No LLM, no network.
+ */
+export function audit(
+  fixtureDir: string,
+  opts: { target?: RuleTarget | 'all'; json?: boolean; outDir?: string; config?: DsOpsConfig } = {},
+): AuditReport {
+  const config = opts.config ?? DEFAULT_CONFIG;
+  const target = opts.target ?? 'all';
+  const { meta, source } = loadFixture(fixtureDir);
+  const adapter = ADAPTERS.find((a) => a.detect(source));
+  if (!adapter) throw new Error(`no adapter recognises ${source.root}`);
+
+  const values = adapter.extract(source, config);
+  const colors = values.filter((v) => v.provenance.classification === 'color');
+  const ctx = { meta, source, config, values, colors };
+
+  const rules = rulesForTarget(target);
+  const findings = rules
+    .flatMap((r) => r.run(ctx))
+    .sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+
+  const distinctColors = new Set(colors.map((v) => v.raw.replace(/\s+/g, ' ').trim().toLowerCase())).size;
+  const ratios = {
+    'literal-colors-per-distinct': round(colors.length / Math.max(distinctColors, 1)),
+    'ambiguous-share': round(
+      values.filter((v) => v.provenance.classification === 'ambiguous').length / Math.max(values.length, 1),
+    ),
+    'findings-per-rule': round(findings.length / Math.max(rules.length, 1)),
+  };
+
+  const report: AuditReport = {
+    manifest: {
+      tool: 'ds-ops',
+      command: 'audit',
+      target,
+      fixtureLabel: meta.label,
+      fixtureSha: meta.fixtureSha,
+      adapter: `${adapter.id}@${adapter.version}`,
+      configHash: hashConfig(config),
+      ranAt: new Date().toISOString(),
+    },
+    rulesRun: rules.map((r) => r.id),
+    findings,
+    ratios,
+    verdict: findings.length === 0 ? 'clean' : 'issues',
+  };
+
+  if (opts.json) {
+    console.log(JSON.stringify(report, null, 2));
+  } else {
+    printReport(report);
+  }
+
+  if (opts.outDir) {
+    mkdirSync(opts.outDir, { recursive: true });
+    const slug = meta.label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    writeFileSync(join(opts.outDir, `${slug}.audit.json`), `${JSON.stringify(report, null, 2)}\n`);
+  }
+
+  return report;
+}
+
+function printReport(r: AuditReport): void {
+  const { manifest: m } = r;
+  console.log(`\n  ds-ops audit — ${m.fixtureLabel}  ·  target: ${m.target}`);
+  console.log(`  fixture ${m.fixtureSha}   adapter ${m.adapter}   config ${m.configHash}`);
+  console.log(`  ${r.rulesRun.length} rules run\n`);
+
+  if (r.findings.length === 0) {
+    console.log('  ✓ clean — no deterministic findings\n');
+  } else {
+    for (const f of r.findings) {
+      console.log(`  [${f.severity.toUpperCase()}] ${f.ruleId}`);
+      console.log(`    ${f.summary}`);
+      console.log(`    where: ${f.where}`);
+      console.log(`    fix:   ${f.fix}\n`);
+    }
+    const bySev = r.findings.reduce<Record<string, number>>((acc, f) => {
+      acc[f.severity] = (acc[f.severity] ?? 0) + 1;
+      return acc;
+    }, {});
+    console.log(
+      `  ${r.findings.length} findings — ` +
+        `${bySev.blocking ?? 0} blocking · ${bySev.high ?? 0} high · ${bySev.medium ?? 0} medium · ${bySev.low ?? 0} low`,
+    );
+  }
+
+  console.log('\n  scorecard ratios');
+  for (const [k, v] of Object.entries(r.ratios)) console.log(`    ${k.padEnd(28)} ${v}`);
+  console.log('');
+}
+
+const round = (n: number) => Math.round(n * 1000) / 1000;

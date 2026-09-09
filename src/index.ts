@@ -13,3 +13,7 @@ export type { ColorPoint, Cluster } from './color/cluster.ts';
 export { scan } from './commands/scan.ts';
 export { sweep } from './commands/sweep.ts';
 export type { SweepResult, SweepPoint } from './commands/sweep.ts';
+export { audit } from './commands/audit.ts';
+export type { AuditReport } from './commands/audit.ts';
+export type { Rule, RuleContext, Finding, Severity, RuleTarget } from './rules/types.ts';
+export { RULES, rulesForTarget, KNOWN_TARGETS } from './rules/registry.ts';

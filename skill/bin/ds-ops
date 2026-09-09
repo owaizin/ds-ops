@@ -1,0 +1,28 @@
+#!/bin/sh
+# ds-ops launcher (v0). Thin wrapper around the TypeScript CLI, run directly by
+# Node's type-stripping — no build, no runtime deps for the analyzer.
+#
+# Distribution note: a self-contained binary (bundled JS, or Rust for the hot
+# rules) replaces this once `guard` runs the detector on every file save. Until
+# then this resolves the CLI relative to the skill install.
+
+set -e
+
+BIN_DIR=$(cd "$(dirname "$0")" && pwd)
+# skill/bin/ds-ops -> repo root is two levels up
+REPO_ROOT=$(cd "$BIN_DIR/../.." && pwd)
+CLI="$REPO_ROOT/src/cli.ts"
+
+if [ ! -f "$CLI" ]; then
+  echo "ds-ops: cannot find CLI at $CLI" >&2
+  echo "ds-ops: this launcher expects the skill installed alongside src/ (v0)" >&2
+  exit 1
+fi
+
+NODE_MAJOR=$(node -p "process.versions.node.split('.')[0]" 2>/dev/null || echo 0)
+if [ "$NODE_MAJOR" -lt 22 ]; then
+  echo "ds-ops: needs Node >= 22.6 (found $(node -v 2>/dev/null || echo none))" >&2
+  exit 1
+fi
+
+exec node --experimental-strip-types --no-warnings "$CLI" "$@"

@@ -14,25 +14,47 @@ lives in a config object with an uncalibrated default; the calibrated values and
 the corpus behind them live in a separate private repo and are passed in at run
 time. See [_The leaky seam_](#the-leaky-seam).
 
-Status: **v0** — the ΔE sweep works end to end. Everything else is scaffolding
-around it.
+Scope line: **impeccable operates on screens; ds-ops operates on the system behind
+them.** Hand a page that needs taste to impeccable; ds-ops is the token layer, the
+component contract, the governance.
+
+Status: **v0** — the deterministic colour-domain audit and the ΔE sweep work end
+to end. The `/ds-ops` skill (14 commands, 5 categories) is specced; most engines
+are scaffolding around the analyzer.
 
 ---
 
 ## What's here in v0
 
 ```
-ds-ops scan  <fixture>     one-shot audit: taxonomy breakdown + palette clusters
-ds-ops sweep <fixture>     sweep the ΔE cutoff across a range, emit the full curve
-ds-ops watch               not implemented — the guard is the detector on a baseline
+ds-ops audit <fixture> [--target color|tokens|…] [--json]   deterministic rule set, severity-ranked, exit 1 on any finding
+ds-ops sweep <fixture> [--out <dir>]                         sweep the ΔE cutoff across a range, emit the full curve
+ds-ops scan  <fixture>                                       quick look: taxonomy breakdown + palette clusters
 ```
 
-Runs on Node ≥ 22.6 with no build step (`--experimental-strip-types`).
+Runs on Node ≥ 22.6 with no build step (`--experimental-strip-types`). The
+`/ds-ops` skill and its playbooks live in [`skill/`](skill/SKILL.md); the launcher
+at `skill/bin/ds-ops` wraps the CLI.
 
 ```bash
 npm install
+node --experimental-strip-types src/cli.ts audit fixtures/radix-colors
 node --experimental-strip-types src/cli.ts sweep fixtures/radix-colors
 ```
+
+### The v0 rule set (colour domain)
+
+| rule | severity | catches |
+| --- | --- | --- |
+| `color/semantic-holds-literal` | high | a semantic token holding a literal instead of `var(--primitive)` |
+| `color/literal-duplicate-tokens` | medium | N tokens declaring byte-identical values (semantic layer re-typing the palette) |
+| `color/near-duplicate-primitives` | low | two primitives within one just-noticeable ΔE |
+| `color/mixed-storage-forms` | medium | hex + hsl-channels + rgb in one source |
+| `color/no-intent-plateau` | low | palette has no ΔE knee at the shipped count |
+
+Every rule is deterministic — no LLM, no network, no API key. Config is the
+mechanism/policy seam: `primitivePattern`, `shadowAlphaCeiling`, the ΔE cutoff all
+have uncalibrated defaults here.
 
 Example output (the healthy control fixture):
 

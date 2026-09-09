@@ -1,0 +1,23 @@
+{
+  "skill": "ds-ops",
+  "version": "0.1.0",
+  "categories": ["Discover", "Audit", "Build", "Guard", "Meta"],
+  "commands": [
+    { "name": "discover", "category": "Discover", "impl": "skill", "status": "spec", "target": false },
+    { "name": "census", "category": "Discover", "impl": "engine", "status": "planned", "target": true },
+    { "name": "audit", "category": "Audit", "impl": "engine", "status": "shipped", "target": true },
+    { "name": "sweep", "category": "Audit", "impl": "engine", "status": "shipped", "target": true },
+    { "name": "drift", "category": "Audit", "impl": "engine", "status": "planned", "target": true },
+    { "name": "tokenize", "category": "Build", "impl": "engine", "status": "planned", "target": true },
+    { "name": "scaffold", "category": "Build", "impl": "engine", "status": "planned", "target": true },
+    { "name": "extract", "category": "Build", "impl": "skill", "status": "planned", "target": true },
+    { "name": "shape", "category": "Review", "impl": "skill", "status": "spec", "target": true },
+    { "name": "review", "category": "Review", "impl": "skill", "status": "spec", "target": true },
+    { "name": "guard", "category": "Guard", "impl": "engine", "status": "planned", "target": false },
+    { "name": "scorecard", "category": "Guard", "impl": "engine", "status": "partial", "target": false },
+    { "name": "doctor", "category": "Meta", "impl": "engine", "status": "planned", "target": false }
+  ],
+  "targets": ["all", "tokens", "color", "spacing", "typography", "elevation", "motion", "components"],
+  "engineCommands": ["audit", "sweep", "scan"],
+  "notes": "status: shipped = works end to end; partial = emitted but not persisted; spec = playbook written, no engine; planned = neither yet."
+}
