@@ -62,11 +62,14 @@ export function audit(
 
   const distinctColors = new Set(colors.map((v) => v.raw.replace(/\s+/g, ' ').trim().toLowerCase())).size;
   const ratios = {
-    'literal-colors-per-distinct': round(colors.length / Math.max(distinctColors, 1)),
-    'ambiguous-share': round(
+    // 1.0 = every color written once. higher = more copy-pasted colors.
+    'color-copies-ratio': round(colors.length / Math.max(distinctColors, 1)),
+    // share of values the tool could not confidently sort out
+    'unclear-values-share': round(
       values.filter((v) => v.provenance.classification === 'ambiguous').length / Math.max(values.length, 1),
     ),
-    'findings-per-rule': round(findings.length / Math.max(rules.length, 1)),
+    // problems found per check run
+    'problems-per-check': round(findings.length / Math.max(rules.length, 1)),
   };
 
   const report: AuditReport = {
@@ -103,32 +106,46 @@ export function audit(
 
 function printReport(r: AuditReport): void {
   const { manifest: m } = r;
-  console.log(`\n  ds-ops audit — ${m.fixtureLabel}  ·  target: ${m.target}`);
-  console.log(`  fixture ${m.fixtureSha}   adapter ${m.adapter}   config ${m.configHash}`);
-  console.log(`  ${r.rulesRun.length} rules run\n`);
+  console.log(`\n  Design system check — ${m.fixtureLabel}  (looking at: ${m.target})`);
+  console.log(`  ${r.rulesRun.length} checks run, using math only — no AI, no guessing`);
+  console.log(`  version ${m.fixtureSha}\n`);
 
   if (r.findings.length === 0) {
-    console.log('  ✓ clean — no deterministic findings\n');
+    console.log('  No problems found.\n');
   } else {
     for (const f of r.findings) {
-      console.log(`  [${f.severity.toUpperCase()}] ${f.ruleId}`);
-      console.log(`    ${f.summary}`);
-      console.log(`    where: ${f.where}`);
-      console.log(`    fix:   ${f.fix}\n`);
+      const label = SEVERITY_LABEL[f.severity];
+      console.log(`  [${label}]  ${f.summary}`);
+      console.log(`    Where:  ${f.where}`);
+      console.log(`    Fix:    ${f.fix}`);
+      console.log(`    (check: ${f.ruleId})\n`);
     }
     const bySev = r.findings.reduce<Record<string, number>>((acc, f) => {
       acc[f.severity] = (acc[f.severity] ?? 0) + 1;
       return acc;
     }, {});
-    console.log(
-      `  ${r.findings.length} findings — ` +
-        `${bySev.blocking ?? 0} blocking · ${bySev.high ?? 0} high · ${bySev.medium ?? 0} medium · ${bySev.low ?? 0} low`,
-    );
+    const parts = (['blocking', 'high', 'medium', 'low'] as const)
+      .filter((s) => bySev[s])
+      .map((s) => `${bySev[s]} ${SEVERITY_LABEL[s].toLowerCase()}`);
+    console.log(`  ${r.findings.length} problem(s) — ${parts.join(', ')}`);
   }
 
-  console.log('\n  scorecard ratios');
-  for (const [k, v] of Object.entries(r.ratios)) console.log(`    ${k.padEnd(28)} ${v}`);
+  console.log('\n  Numbers to track over time (lower is better, except where noted):');
+  console.log(
+    `    ${String(r.ratios['color-copies-ratio']).padEnd(6)} colors written per unique color  (1.0 = none copy-pasted)`,
+  );
+  console.log(
+    `    ${String(r.ratios['unclear-values-share']).padEnd(6)} share of values the tool couldn't sort out`,
+  );
+  console.log(`    ${String(r.ratios['problems-per-check']).padEnd(6)} problems found per check`);
   console.log('');
 }
+
+const SEVERITY_LABEL: Record<string, string> = {
+  blocking: 'STOP',
+  high: 'IMPORTANT',
+  medium: 'SHOULD FIX',
+  low: 'MINOR',
+};
 
 const round = (n: number) => Math.round(n * 1000) / 1000;

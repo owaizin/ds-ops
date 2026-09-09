@@ -1,120 +1,115 @@
 # ds-ops
 
-**design-system-ops** — audit, scaffold, and guardrail a design system from its code.
+**A tool that reads a design system's code and points at everything that's broken — using math, not AI.**
 
-An agency walks into a product with no design system, or a failing one. They do a
-token audit, take a component census, stand up a Storybook, migrate one surface to
-prove it, then install the guardrails that keep entropy from winning after they
-leave. `ds-ops` is that engagement as tooling: a small set of engines with a
-one-shot mode (the audit) and a watch mode (the guard), plus the skills that carry
-the judgment.
+A design system is a shared set of colors, spacing, and parts that a whole app is
+built from. Over time people stop using the shared pieces and paste in their own.
+AI coding tools speed this up. Soon there are four kinds of blue and nothing lines
+up. That's the mess this tool finds.
 
-This repo is the **open engine**. It is policy-free mechanism. Every tuned number
-lives in a config object with an uncalibrated default; the calibrated values and
-the corpus behind them live in a separate private repo and are passed in at run
-time. See [_The leaky seam_](#the-leaky-seam).
+You run one command. It scans the code and prints a list: what's wrong, the exact
+file and line, and how to fix it — with a plain-English "why it matters" on every
+item. Same input, same answer, every time. No AI. No internet. No API key.
 
-Scope line: **impeccable operates on screens; ds-ops operates on the system behind
-them.** Hand a page that needs taste to impeccable; ds-ops is the token layer, the
-component contract, the governance.
+**How it's different from [`design-system-ops`](https://github.com/murphytrueman/design-system-ops):**
+that one is a set of AI helpers — a smart advisor that reads your system and gives
+advice. This one is the measuring instrument the advisor doesn't have: it *proves*
+things. Run this first, then the advisor.
 
-Status: **v0** — the deterministic colour-domain audit and the ΔE sweep work end
-to end. The `/ds-ops` skill (14 commands, 5 categories) is specced; most engines
-are scaffolding around the analyzer.
+**How it's different from [impeccable](https://impeccable.style):** impeccable makes
+one screen look good. ds-ops checks the shared system behind all the screens.
+
+Status: **v0** — the color checks and the palette test work end to end. The rest is
+sketched.
 
 ---
 
-## What's here in v0
+## Try it
 
-```
-ds-ops audit <fixture> [--target color|tokens|…] [--json]   deterministic rule set, severity-ranked, exit 1 on any finding
-ds-ops sweep <fixture> [--out <dir>]                         sweep the ΔE cutoff across a range, emit the full curve
-ds-ops scan  <fixture>                                       quick look: taxonomy breakdown + palette clusters
-```
-
-Runs on Node ≥ 22.6 with no build step (`--experimental-strip-types`). The
-`/ds-ops` skill and its playbooks live in [`skill/`](skill/SKILL.md); the launcher
-at `skill/bin/ds-ops` wraps the CLI.
+Needs Node 22.6+. No build step, no dependencies to run.
 
 ```bash
-npm install
 node --experimental-strip-types src/cli.ts audit fixtures/radix-colors
-node --experimental-strip-types src/cli.ts sweep fixtures/radix-colors
+node --experimental-strip-types src/cli.ts sweep  fixtures/radix-colors
 ```
 
-### The v0 rule set
+Three commands so far:
 
-| rule | severity | catches |
+- `audit` — run every check, print the problems, exit non-zero if there are any (so CI catches it)
+- `sweep` — the color-palette test: blur the colors together step by step and see if the palette was hand-picked or machine-made
+- `scan` — a quick look at what colors exist
+
+### What `audit` checks (so far — colors only)
+
+| what it looks for | how bad | plain version |
 | --- | --- | --- |
-| `token/tier-leakage` | high | a token referencing the wrong tier — component → primitive skips, upward references. Breaks theme propagation. |
-| `token/semantic-name-describes-appearance` | medium / low | a semantic token named for a colour or size (`color.action.blue`) — a primitive with extra steps. Low when only category/chart tokens. |
-| `color/semantic-holds-literal` | high | a semantic token holding a literal instead of `var(--primitive)` |
-| `color/literal-duplicate-tokens` | medium | N tokens declaring byte-identical values (semantic layer re-typing the palette) |
-| `color/near-duplicate-primitives` | low | two primitives within one just-noticeable ΔE |
-| `color/mixed-storage-forms` | medium | hex + hsl-channels + rgb in one source |
-| `color/no-intent-plateau` | low | palette has no ΔE knee at the shipped count |
+| `token/tier-leakage` | important | a specific part (a button) grabs a raw color directly instead of going through a named color. A rebrand won't reach it. |
+| `color/semantic-holds-literal` | important | a named color has its value typed in by hand instead of pointing at a base color. Now there are two copies. |
+| `color/literal-duplicate-tokens` | should fix | the same exact color written out under several names. Nobody knows which is real. |
+| `color/mixed-storage-forms` | should fix | colors written several different ways (`#hex`, `rgb()`, …) in one file. |
+| `token/semantic-name-describes-appearance` | minor | a color named for how it looks (`action-blue`) not what it does (`action-primary`). Fine for chart colors. |
+| `color/near-duplicate-primitives` | minor | two base colors the eye can't tell apart. |
+| `color/no-intent-plateau` | minor | the palette doesn't look hand-picked — steps too fine to see, or machine-generated. |
+
+Every check is math — no AI, no guessing. The numbers the checks use (how close is
+"too close", what counts as a base color) all live in one config file with plain
+starting values you can tune.
 
 Every rule is deterministic — no LLM, no network, no API key. Config is the
 mechanism/policy seam: `primitivePattern`, `componentPattern`, `reservedSemanticTerms`,
 `shadowAlphaCeiling`, the ΔE cutoff all have uncalibrated defaults here.
 
-### Interop with `design-system-ops`
+### Shares a config file with `design-system-ops`
 
-[Murphy Trueman's `design-system-ops`](https://github.com/murphytrueman/design-system-ops)
-is a Claude Code skill pack — the practitioner brain: 40 LLM skills for governance,
-documentation, and communication around a live system. ds-ops is the deterministic
-instrument that pack lacks. They compose.
+If a team already uses Murphy Trueman's `design-system-ops`, they have a
+`.ds-ops-config.yml`. ds-ops reads the same file — the `system:` block tells it
+about the project, and the `severity:` block sets how serious each problem is
+(`tier_leakage: critical` makes that problem a hard stop). One config, both tools.
 
-ds-ops reads a `.ds-ops-config.yml` in that pack's format: the `system:` block
-seeds context, the `severity:` block maps onto ds-ops rule severities
-(`tier_leakage: critical` → `token/tier-leakage` at `blocking`). A team already
-running the skill pack points ds-ops at the same file.
-
-Example output (the healthy control fixture):
+Example — the `sweep` output on a known-good palette (Radix):
 
 ```
-  72 distinct color literals
-  humans shipped 72 primitives
+  Color palette check — Radix Colors
+  We blur the colors together, a little more each row, and count how many are left.
 
-  ΔE   0.50   72  ████████████████████████████████████████
-  ΔE   1.00   70  ███████████████████████████████████████
-  ...
-  ΔE   6.00   26  ██████████████
-  ...
-  monotone non-increasing: yes
-  verdict: no plateau sits at the 72 humans shipped. The count passes through 72
-  near ΔE 0.75 without holding — the palette has no natural knee there.
+  blur   colors left
+   0.50   72  ████████████████████████████████████████
+   1.00   70  ███████████████████████████████████████
+   6.00   26  ██████████████
+
+  The count only ever goes down as we blur harder — good, the method works.
+  What this tells us: the count passes through 72 but doesn't pause there.
+  Radix's colors sit closer together than the eye can follow — a machine-made
+  scale, not a hand-picked one.
 ```
 
-That verdict is the point. Radix's light scales are built tighter than one
-just-noticeable-difference apart, so a single ΔE cutoff **cannot** recover the
-human's palette size. The sweep tells you when the metric works and when it
-doesn't, per source, rather than pretending one cutoff is universal.
+That's the point of `sweep`: it tells you whether a palette was chosen by a person
+or generated by a tool, and it does it the same way every time.
 
 ---
 
-## The three engines (roadmap)
+## What's coming
 
-The eight phases of a design-system engagement collapse to three engines, each
-with a one-shot and a watch mode:
+Three parts, roughly:
 
-| Engine | One-shot (t=0 audit) | Watch (continuous guard) |
-| --- | --- | --- |
-| **analyzer** | `scan` / `sweep` — extract every style value with provenance, classify, cluster | drift detection against a committed baseline |
-| **clusterer** | component census — group near-duplicate components across the repo | "does this component already exist?" on a single candidate |
-| **generator** | scaffold a Storybook, the token files, the 5-file component contract | codemods, CI wiring |
+- **the reader** — what runs today: pull every color/spacing/font value out of the
+  code, sort them, run the checks. Later: watch for new problems against a saved baseline.
+- **the matcher** — take an inventory of components, group the near-duplicates
+  ("these four are all a button"), and answer "does this already exist?".
+- **the builder** — generate the starting files: a Storybook, the token files, the
+  standard set of files a new component needs.
 
-Phases become invocation modes over three engines, not eight separately
-maintained tools. v0 ships the analyzer's `scan` and `sweep`.
+Today only the reader works, for colors.
 
 ---
 
-## Adapters
+## For contributors
 
-An **adapter** turns one storage format into a flat list of `RawValue`s with full
-provenance. Adapters are the asset that accumulates across engagements — every new
-client storage shape is one new adapter, and [the interface](src/adapters/types.ts)
-never moves.
+### Adapters — one per code format
+
+An **adapter** reads one way of storing design values (CSS variables, Sass maps,
+JS objects) and turns it into a flat list, each item tagged with where it came from.
+Every new client's setup is one new adapter; nothing downstream changes.
 
 | Adapter | Recognises | Status |
 | --- | --- | --- |
@@ -123,58 +118,33 @@ never moves.
 | `js-scale-objects` | exported `{ 1: '#...', 2: '#...' }` (Radix-style) | planned |
 | `tokens-studio-json` | W3C design-tokens JSON | planned |
 
-Adapters extract and classify one value at a time. They never cluster, dedupe, or
-judge intent — everything downstream is format-agnostic.
+Adapters only read and tag. They don't group or judge — the checks do that, and
+they work the same no matter which adapter fed them.
 
----
+### Every finding comes with a receipt
 
-## Provenance
+Each problem the tool reports carries: the file, the line, the exact value, and why
+it was flagged — plus which version of the code and which adapter produced it. So
+when you re-run it next month and a number changed, you can tell whether the *code*
+changed, the *tool* changed, or a *setting* changed.
 
-Every value carries where it came from and why it was classified the way it was:
-`file · line · selector · property · tokenName · classification · reason ·
-fixtureSha · adapterId · adapterVersion`.
+### Fixtures — frozen copies to test against
 
-A calibration row is only comparable across runs if a delta can be attributed to
-one of three causes: the **source** changed (`fixtureSha`), the **adapter** changed
-(`adapterVersion`), or the **threshold** changed (recorded in the run manifest).
-Reconstructing this after the fact is impossible; it is cheap now.
+A fixture is a saved snapshot of one design system's color files, with a note
+recording exactly where it came from. Snapshots, not live copies — so a result from
+today can be compared to one from six months ago, and anyone can reproduce it.
+Open-source systems live here; client files stay in a private repo.
 
----
+### Where the tool makes a judgment call
 
-## Fixtures
+Some decisions aren't pure math — like whether a faint `rgba(0,0,0,.06)` is a real
+color or just part of a shadow. The tool takes a side, but:
 
-A fixture is a **frozen snapshot** of one source's token files plus a `SOURCE.json`
-recording exactly what was copied and from where — never a live checkout. Snapshots
-are what make a calibration row comparable across runs and a writeup reproducible
-by a reader.
+1. it **shows its reasoning** on every call, and lists anything it wasn't sure about
+2. those decisions are all **settings you can change** in the config file
 
-```
-fixtures/radix-colors/
-  SOURCE.json          label, upstream, fixtureSha, shippedPrimitiveCount, notes
-  css/                  the vendored files
-```
-
-Public fixtures in this repo are open-source design systems (verifiable by anyone).
-Client and proprietary fixtures live in the private calibration repo.
-
----
-
-## The leaky seam
-
-The mechanism/policy split is real but not clean. Feature extraction is itself a
-judgment call: whether `rgba(0,0,0,.06)` inside a shadow is a color or part of a
-shadow recipe, whether a low-alpha value is an overlay tint or a palette entry.
-That taxonomy is an opinion, and it lives in the open engine on purpose — an
-opinionated engine is better distribution than a neutral one. Two mitigations:
-
-1. Every taxonomy decision is **logged in the output** with its reason, and the
-   ambiguous set is surfaced for a human. The opinion is inspectable.
-2. The taxonomy hints are still config (`taxonomy.shadowTokenHints`,
-   `taxonomy.shadowAlphaCeiling`, …) — a consumer can override them.
-
-What is *not* in this repo: the tuned ΔE cutoffs per source, the API-surface caps,
-the restraint doctrine's calibrated numbers, and the corpus of before/after
-engagement runs that tunes them.
+The tuned numbers — what "too close" means for a specific client, and the record of
+before/after runs that set those numbers — live in a separate private repo, not here.
 
 ---
 

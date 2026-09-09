@@ -12,14 +12,13 @@ function normRaw(raw: string): string {
 }
 
 /**
- * A semantic token (not a primitive) holds a literal color instead of a
- * var() reference to a primitive. This breaks the layer model: renaming a
- * palette entry can no longer propagate, and the same colour now lives in
- * two places that will drift.
+ * A named color has its value typed in directly instead of pointing at one of
+ * the shared base colors. Now the same color lives in two places. Change one and
+ * the other silently stays wrong.
  */
 export const semanticLiteralRule: Rule = {
   id: 'color/semantic-holds-literal',
-  title: 'Semantic token holds a literal colour, not a var() reference',
+  title: 'A color is typed in by hand instead of pointing at a shared base color',
   targets: ['tokens', 'color'],
   run(ctx: RuleContext): Finding[] {
     const pattern = ctx.config.taxonomy.primitivePattern;
@@ -29,12 +28,12 @@ export const semanticLiteralRule: Rule = {
       {
         ruleId: this.id,
         severity: 'high',
-        summary: `${offenders.length} semantic token(s) hold a literal colour instead of referencing a primitive`,
+        summary: `${offenders.length} named color(s) have their value typed in directly instead of pointing at a shared base color`,
         where: offenders
           .slice(0, 8)
           .map((v) => `${v.provenance.tokenName} = ${v.raw} (${v.provenance.file}:${v.provenance.line})`)
           .join('; '),
-        fix: 'Point each at a primitive: --token: var(--<ns>-palette-<name>). If no primitive matches, add one first.',
+        fix: 'Point each one at a base color instead — like `--button-bg: var(--palette-blue-600)`. If no base color matches, add one first. Why it matters: right now this color exists in two spots. Someone updates the base color, this one silently stays the old value.',
         data: {
           count: offenders.length,
           tokens: offenders.map((v) => v.provenance.tokenName),
@@ -45,12 +44,12 @@ export const semanticLiteralRule: Rule = {
 };
 
 /**
- * Two or more tokens carry byte-identical colour values. Usually a semantic
- * layer re-typing a palette value rather than aliasing it.
+ * The same exact color value is written out under two or more different names.
+ * Nobody knows which name is the "real" one, and copies drift apart over time.
  */
 export const literalDuplicateRule: Rule = {
   id: 'color/literal-duplicate-tokens',
-  title: 'Multiple tokens declare the same literal colour value',
+  title: 'The same exact color is written out in several places',
   targets: ['tokens', 'color'],
   run(ctx: RuleContext): Finding[] {
     const byValue = new Map<string, string[]>();
@@ -67,12 +66,12 @@ export const literalDuplicateRule: Rule = {
       {
         ruleId: this.id,
         severity: 'medium',
-        summary: `${dupes.length} colour value(s) are declared by ${total} different tokens`,
+        summary: `${dupes.length} color value(s) are written out under ${total} different names`,
         where: dupes
           .slice(0, 6)
           .map(([val, names]) => `${val} <- ${[...new Set(names)].join(', ')}`)
           .join('; '),
-        fix: 'Keep one canonical token per value; make the rest var() aliases of it.',
+        fix: 'Pick one name as the real one. Make the others point at it instead of repeating the value. Why it matters: these are copies. When the color needs to change, someone will update some of them and miss the rest.',
         data: { groups: dupes.map(([val, names]) => ({ value: val, tokens: [...new Set(names)] })) },
       },
     ];
@@ -80,13 +79,12 @@ export const literalDuplicateRule: Rule = {
 };
 
 /**
- * Two palette primitives sit within a just-noticeable ΔE of each other.
- * Either an accidental near-duplicate or an over-fine ramp step no one can
- * tell apart in product.
+ * Two base colors sit close enough that the eye cannot tell them apart. Either
+ * an accidental duplicate, or a gradient step too fine to see.
  */
 export const nearDuplicatePaletteRule: Rule = {
   id: 'color/near-duplicate-primitives',
-  title: 'Palette primitives are perceptually indistinguishable',
+  title: 'Two base colors are so close the eye cannot tell them apart',
   targets: ['tokens', 'color'],
   run(ctx: RuleContext): Finding[] {
     const pattern = ctx.config.taxonomy.primitivePattern;
@@ -112,12 +110,12 @@ export const nearDuplicatePaletteRule: Rule = {
       {
         ruleId: this.id,
         severity: 'low',
-        summary: `${pairs.length} pair(s) of palette primitives are within ΔE ${threshold} — below a reliable just-noticeable difference`,
+        summary: `${pairs.length} pair(s) of base colors are close enough that a person can't see the difference (color-distance under ${threshold})`,
         where: pairs
           .slice(0, 8)
-          .map((p) => `${p.a} ≈ ${p.b} (ΔE ${p.deltaE})`)
+          .map((p) => `${p.a} ≈ ${p.b} (distance ${p.deltaE.toFixed(1)})`)
           .join('; '),
-        fix: 'Confirm each pair is a deliberate ramp step. Collapse the ones that are not.',
+        fix: 'Look at each pair. If they are two steps of the same gradient, leave them. If not, delete one and use the other everywhere. Why it matters: two colors nobody can tell apart are not two colors — they are one color plus a mistake waiting to happen.',
         data: { pairs },
       },
     ];
@@ -125,13 +123,12 @@ export const nearDuplicatePaletteRule: Rule = {
 };
 
 /**
- * Colour values in one source are stored in more than one form (hex + hsl
- * channels + rgb). A design system should commit to one convention so every
- * consumer writes the same wrapper.
+ * Colors in one file are written several different ways (#hex, rgb(), hsl()
+ * channels). Every developer then has to remember which format each color uses.
  */
 export const mixedColorFormRule: Rule = {
   id: 'color/mixed-storage-forms',
-  title: 'Colour values use inconsistent storage forms',
+  title: 'Colors are written in several different formats',
   targets: ['tokens', 'color'],
   run(ctx: RuleContext): Finding[] {
     const forms = new Map<string, number>();
@@ -144,9 +141,9 @@ export const mixedColorFormRule: Rule = {
       {
         ruleId: this.id,
         severity: 'medium',
-        summary: `colour values are stored in ${forms.size} different forms`,
+        summary: `colors are written ${forms.size} different ways in the same file`,
         where: [...forms.entries()].map(([f, n]) => `${f}: ${n}`).join(', '),
-        fix: 'Pick one storage convention (hex, or HSL/OKLCH channels for free alpha) and migrate the rest. Document which wrapper each token type needs.',
+        fix: 'Pick one format for every color and convert the rest. Why it matters: mixed formats mean every person editing a color has to first figure out which format that one uses. A paper cut on every line.',
         data: { forms: Object.fromEntries(forms) },
       },
     ];
@@ -154,13 +151,13 @@ export const mixedColorFormRule: Rule = {
 };
 
 /**
- * The ΔE sweep, expressed as a rule: does this palette have an intent plateau
- * near the count the humans shipped? Its absence means either a generated
- * scale or a palette with no deliberate "these are the same" decisions.
+ * Blur the colors together step by step. A palette a person chose by hand has a
+ * clear stretch where the count holds steady. A machine-generated scale, or a
+ * palette with steps too fine to see, does not.
  */
 export const colorKneeRule: Rule = {
   id: 'color/no-intent-plateau',
-  title: 'Palette has no ΔE plateau at the shipped primitive count',
+  title: "The color palette doesn't look hand-picked",
   targets: ['color'],
   run(ctx: RuleContext): Finding[] {
     const shipped = ctx.meta.shippedPrimitiveCount;
@@ -188,9 +185,9 @@ export const colorKneeRule: Rule = {
       {
         ruleId: this.id,
         severity: 'low',
-        summary: `no ΔE band holds a cluster count within 15% of the ${shipped} shipped primitives`,
-        where: `swept ΔE ${min}–${max}`,
-        fix: 'If this is a hand-authored palette, the missing plateau means adjacent entries are closer than one JND — review whether the ramp is over-fine. If it is a generated scale, that is expected. Run `ds-ops sweep` for the full curve.',
+        summary: `as we blur the colors together, the count never settles near the ${shipped} colors you shipped`,
+        where: `checked across the full range of blur amounts`,
+        fix: 'If a person picked this palette by hand, the missing steady stretch means some colors sit closer than the eye can follow — check the light end of each color ramp for steps nobody can see. If a tool generated the scale, this is expected. Run `ds-ops sweep` to see the full picture.',
         data: { shipped, plateauFrom, plateauTo },
       },
     ];
