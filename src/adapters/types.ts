@@ -2,12 +2,14 @@ import type { DsOpsConfig } from '../config/schema.ts';
 import type { RawValue } from '../core/provenance.ts';
 
 export type SourceRef = {
-  /** absolute path to the vendored fixture root */
+  /** absolute path to the fixture root or the live directory being scanned */
   root: string;
-  /** upstream commit SHA of the fixture — flows into every provenance record */
+  /** upstream commit SHA of the fixture, or `git:<sha>` / `live` for a working tree */
   fixtureSha: string;
   /** human label for reports and calibration rows */
   label: string;
+  /** when set, the adapter reads only these absolute file paths (hook / --files mode) */
+  only?: string[];
 };
 
 /**

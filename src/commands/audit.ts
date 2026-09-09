@@ -5,9 +5,9 @@ import type { Adapter } from '../adapters/types.ts';
 import { DEFAULT_CONFIG } from '../config/defaults.ts';
 import type { DsOpsConfig } from '../config/schema.ts';
 import { hashConfig } from '../config/schema.ts';
-import { loadFixture } from '../core/fixture.ts';
+import { changedFiles, resolveSource } from '../core/source.ts';
 import { rulesForTarget } from '../rules/registry.ts';
-import { type Finding, type RuleTarget, SEVERITY_ORDER } from '../rules/types.ts';
+import { type Finding, type RuleTarget, SEVERITY_ORDER, type Severity } from '../rules/types.ts';
 
 const ADAPTERS: Adapter[] = [cssCustomPropsAdapter];
 
@@ -34,30 +34,45 @@ export type AuditReport = {
  * returns severity-ranked findings + scorecard ratios. No LLM, no network.
  */
 export function audit(
-  fixtureDir: string,
+  targetPath: string,
   opts: {
     target?: RuleTarget | 'all';
     json?: boolean;
     outDir?: string;
     config?: DsOpsConfig;
     severityOverrides?: Record<string, Finding['severity']>;
+    /** limit the scan to these files (hook mode) */
+    files?: string[];
+    /** limit the scan to files changed vs this git ref */
+    since?: string;
+    /** drop findings weaker than this */
+    minSeverity?: Severity;
+    /** print nothing when there are no findings at or above minSeverity */
+    quiet?: boolean;
   } = {},
 ): AuditReport {
   const config = opts.config ?? DEFAULT_CONFIG;
   const overrides = opts.severityOverrides ?? {};
-  const target = opts.target ?? 'all';
-  const { meta, source } = loadFixture(fixtureDir);
+  const ruleTarget = opts.target ?? 'all';
+
+  const only = [...(opts.files ?? []), ...(opts.since ? changedFiles(opts.since) : [])];
+  const { meta, source, live } = resolveSource(targetPath, { only: only.length ? only : undefined });
   const adapter = ADAPTERS.find((a) => a.detect(source));
-  if (!adapter) throw new Error(`no adapter recognises ${source.root}`);
+  if (!adapter) {
+    // no recognisable token files in scope — a clean no-op, not an error (hook mode)
+    return emptyReport(ruleTarget, meta);
+  }
 
   const values = adapter.extract(source, config);
   const colors = values.filter((v) => v.provenance.classification === 'color');
   const ctx = { meta, source, config, values, colors };
 
-  const rules = rulesForTarget(target);
+  const rules = rulesForTarget(ruleTarget);
+  const minRank = opts.minSeverity ? SEVERITY_ORDER[opts.minSeverity] : Number.POSITIVE_INFINITY;
   const findings = rules
     .flatMap((r) => r.run(ctx))
     .map((f) => (overrides[f.ruleId] ? { ...f, severity: overrides[f.ruleId]! } : f))
+    .filter((f) => SEVERITY_ORDER[f.severity] <= minRank)
     .sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
 
   const distinctColors = new Set(colors.map((v) => v.raw.replace(/\s+/g, ' ').trim().toLowerCase())).size;
@@ -73,7 +88,7 @@ export function audit(
     manifest: {
       tool: 'ds-ops',
       command: 'audit',
-      target,
+      target: ruleTarget,
       fixtureLabel: meta.label,
       fixtureSha: meta.fixtureSha,
       adapter: `${adapter.id}@${adapter.version}`,
@@ -86,10 +101,10 @@ export function audit(
     verdict: findings.length === 0 ? 'clean' : 'issues',
   };
 
-  if (opts.json) {
-    console.log(JSON.stringify(report, null, 2));
-  } else {
-    printReport(report);
+  const silent = opts.quiet && findings.length === 0;
+  if (!silent) {
+    if (opts.json) console.log(JSON.stringify(report, null, 2));
+    else printReport(report, { live });
   }
 
   if (opts.outDir) {
@@ -101,10 +116,30 @@ export function audit(
   return report;
 }
 
-function printReport(r: AuditReport): void {
+function emptyReport(target: string, meta: { label: string; fixtureSha: string }): AuditReport {
+  return {
+    manifest: {
+      tool: 'ds-ops',
+      command: 'audit',
+      target,
+      fixtureLabel: meta.label,
+      fixtureSha: meta.fixtureSha,
+      adapter: 'none',
+      configHash: '00000000',
+      ranAt: new Date().toISOString(),
+    },
+    rulesRun: [],
+    findings: [],
+    ratios: {},
+    verdict: 'clean',
+  };
+}
+
+function printReport(r: AuditReport, opts: { live: boolean } = { live: false }): void {
   const { manifest: m } = r;
-  console.log(`\n  ds-ops audit — ${m.fixtureLabel}  ·  target: ${m.target}`);
-  console.log(`  fixture ${m.fixtureSha}   adapter ${m.adapter}   config ${m.configHash}`);
+  const scope = opts.live ? 'live scan' : 'fixture';
+  console.log(`\n  ds-ops audit — ${m.fixtureLabel}  ·  target: ${m.target}  ·  ${scope}`);
+  console.log(`  version ${m.fixtureSha}   adapter ${m.adapter}   config ${m.configHash}`);
   console.log(`  ${r.rulesRun.length} rules run\n`);
 
   if (r.findings.length === 0) {

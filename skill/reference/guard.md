@@ -1,50 +1,43 @@
 # guard
 
-Install and manage the continuous enforcement layer. `guard` is `audit` and the
-structural validators wired into CI and pre-commit, plus the scorecard timeseries.
+Install a hook so ds-ops audits a style file the moment it is edited, and
+surfaces high-severity findings back to the agent.
 
 ```bash
-<skill-base-dir>/bin/ds-ops guard on      # install hooks + CI workflow
-<skill-base-dir>/bin/ds-ops guard status  # what is installed, what is stale
-<skill-base-dir>/bin/ds-ops guard off     # remove, preserving unrelated hook entries
+<skill-base-dir>/bin/ds-ops guard on      # install the PostToolUse hook in ./.claude/settings.json
+<skill-base-dir>/bin/ds-ops guard status  # is it installed, and where does it point
+<skill-base-dir>/bin/ds-ops guard off     # remove it, leaving every other hook in place
 ```
 
-## The one rule: deterministic blocks, judgment comments
+## What `guard on` installs
 
-| Check | Kind | In CI |
-|---|---|---|
-| token CSS/JSON parity | deterministic | **block** |
-| `audit` findings at `high`+ | deterministic | **block** |
-| the 5-file component contract validator | deterministic | **block** |
-| MDX-v3 syntax validator | deterministic | **block** |
-| component reuse ("raw `<input type=checkbox>` where a component exists") | judgment | **comment** |
-| slop scan (near-duplicate components, "just in case" props, dead stories) | judgment | **comment** |
-| `audit` findings at `medium`/`low` | deterministic but noisy | **comment** |
+A `PostToolUse` entry matching `Edit|Write|MultiEdit`. After any such edit the
+hook (`skill/hooks/ds-ops-guard.mjs`):
 
-A judgment check that blocks a merge on a false positive gets the whole check
-disabled by the first engineer it inconveniences. Comment only.
+1. reads the payload, pulls the file path
+2. if it is not a `.css` / `.scss` file — exits silently
+3. runs `ds-ops audit <cwd> --files <that file> --min-severity high --quiet --json`
+4. if there are `high`+ findings — prints them to stderr and exits 2, so the
+   agent gets them as feedback; otherwise exits 0 silently
 
-## Branch scope
+It **never blocks** the edit — a PostToolUse hook fires after the write already
+landed. It nags; it does not stop.
 
-`guard` also installs the branch-scope policy from `reference/scope.md`: on a
-`ds/*` or `story/*` branch, edits outside the design-system directories are
-rejected pre-commit with a message pointing at a `feat/*` branch instead.
+## Rules that surface
 
-## Scorecard
+Only `high` and `blocking`. `medium` / `low` on every save is noise. To see
+everything, run `ds-ops audit` by hand. To promote a rule for a project, set its
+severity in `.ds-ops-config.yml` (`tier_leakage: critical`).
 
-Every CI run on `main` appends one line to `.ds-scorecard/history.jsonl`:
+## Merging
 
-```json
-{"ranAt":"…","commit":"…","ratios":{"raw-values-per-declared":0.04,"drift-per-component":0.0,"orphan-stories-per-story":0.11}}
-```
+`guard on` appends to `PostToolUse`; it does not replace the array. `guard off`
+removes only the ds-ops entry (matched by the `ds-ops-guard.mjs` path) and drops
+the `PostToolUse` key only if nothing else is left. Other hooks, permissions, and
+settings are untouched. `guard on` twice is a no-op.
 
-Ratios, not counts — raw-value count rises with the codebase even when discipline
-is perfect, and a trend line that punishes growth gets ignored. The file is
-committed and the client owns it; the renewal conversation is `git log` on it.
+## Not yet
 
-## NEVER
-
-- Wire a judgment check as a blocking check.
-- Emit a bare count into the scorecard.
-- Write the scorecard from a local run — CI on `main` only, or it is sparse and gameable.
-- Overwrite an unrelated pre-commit hook entry.
+The blocking half — token CSS/JSON parity, the 5-file component contract, the
+MDX validators — and the `scorecard` timeseries. Those ride in when `tokenize` /
+`scaffold` exist. For now `guard` is the live-edit nag only.

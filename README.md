@@ -18,18 +18,23 @@ Scope line: **impeccable operates on screens; ds-ops operates on the system behi
 them.** Hand a page that needs taste to impeccable; ds-ops is the token layer, the
 component contract, the governance.
 
-Status: **v0** — the deterministic colour-domain audit and the ΔE sweep work end
-to end. The `/ds-ops` skill (14 commands, 5 categories) is specced; most engines
-are scaffolding around the analyzer.
+Status: **v0** — the deterministic colour-domain audit, the ΔE sweep, live-tree
+scanning, and the edit-time guard hook work end to end. The `/ds-ops` skill
+(14 commands, 5 categories) is specced; most engines are scaffolding.
 
 ---
 
 ## What's here in v0
 
 ```
-ds-ops audit <fixture> [--target color|tokens|…] [--json]   deterministic rule set, severity-ranked, exit 1 on any finding
-ds-ops sweep <fixture> [--out <dir>]                         sweep the ΔE cutoff across a range, emit the full curve
-ds-ops scan  <fixture>                                       quick look: taxonomy breakdown + palette clusters
+ds-ops audit <path> [--target color|tokens|…] [--json] [--files a,b] [--since <ref>] [--min-severity high] [--quiet]
+    Deterministic rule set, severity-ranked, exit 1 on any surviving finding.
+    <path> is a fixture dir (SOURCE.json) OR any dir / .css file — a live scan
+    of the working tree. --files / --since narrow to changed files.
+
+ds-ops sweep <path> [--out <dir>]     the ΔE cutoff sweep — full curve
+ds-ops scan  <path>                   quick look: taxonomy breakdown + clusters
+ds-ops guard <on|off|status>          install/remove the edit-time hook (below)
 ```
 
 Runs on Node ≥ 22.6 with no build step (`--experimental-strip-types`). The
@@ -38,9 +43,18 @@ at `skill/bin/ds-ops` wraps the CLI.
 
 ```bash
 npm install
-node --experimental-strip-types src/cli.ts audit fixtures/radix-colors
-node --experimental-strip-types src/cli.ts sweep fixtures/radix-colors
+node --experimental-strip-types src/cli.ts audit fixtures/radix-colors   # a frozen fixture
+node --experimental-strip-types src/cli.ts audit ../some-app/src         # a live repo
 ```
+
+### `guard` — nag on edit, like impeccable's hook
+
+`ds-ops guard on` writes a `PostToolUse` hook into `./.claude/settings.json`.
+After any `Edit`/`Write` to a `.css` file, ds-ops audits that one file and, if
+there are `high`+ findings, prints them to stderr (exit 2) so the coding agent
+sees them. Silent on a clean save, silent on non-style files. **Never blocks** —
+a PostToolUse hook fires after the write. `guard off` removes only the ds-ops
+entry; every other hook, permission, and setting is left alone.
 
 ### The v0 rule set
 

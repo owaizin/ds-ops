@@ -6,7 +6,7 @@ import { type ColorPoint, clusterByDeltaE } from '../color/cluster.ts';
 import { DEFAULT_CONFIG } from '../config/defaults.ts';
 import type { DsOpsConfig } from '../config/schema.ts';
 import { hashConfig } from '../config/schema.ts';
-import { loadFixture } from '../core/fixture.ts';
+import { resolveSource } from '../core/source.ts';
 
 const ADAPTERS: Adapter[] = [cssCustomPropsAdapter];
 
@@ -44,7 +44,7 @@ export type SweepResult = {
  */
 export function sweep(fixtureDir: string, opts: { outDir?: string; config?: DsOpsConfig } = {}): SweepResult {
   const config = opts.config ?? DEFAULT_CONFIG;
-  const { meta, source } = loadFixture(fixtureDir);
+  const { meta, source } = resolveSource(fixtureDir);
   const adapter = ADAPTERS.find((a) => a.detect(source));
   if (!adapter) throw new Error(`no adapter recognises ${source.root}`);
 

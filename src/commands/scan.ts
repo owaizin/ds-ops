@@ -4,8 +4,8 @@ import { type ColorPoint, clusterByDeltaE } from '../color/cluster.ts';
 import { DEFAULT_CONFIG } from '../config/defaults.ts';
 import type { DsOpsConfig } from '../config/schema.ts';
 import { hashConfig } from '../config/schema.ts';
-import { loadFixture } from '../core/fixture.ts';
 import type { RawValue } from '../core/provenance.ts';
+import { resolveSource } from '../core/source.ts';
 
 const ADAPTERS: Adapter[] = [cssCustomPropsAdapter];
 
@@ -15,7 +15,7 @@ const ADAPTERS: Adapter[] = [cssCustomPropsAdapter];
  * default ΔE this uses.
  */
 export function scan(fixtureDir: string, config: DsOpsConfig = DEFAULT_CONFIG): void {
-  const { meta, source } = loadFixture(fixtureDir);
+  const { meta, source } = resolveSource(fixtureDir);
   const adapter = ADAPTERS.find((a) => a.detect(source));
   if (!adapter) throw new Error(`no adapter recognises ${source.root}`);
 

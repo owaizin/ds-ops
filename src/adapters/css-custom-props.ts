@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { alphaOf, looksLikeColor } from '../color/convert.ts';
 import type { DsOpsConfig } from '../config/schema.ts';
@@ -37,7 +37,10 @@ const DECL = /(--[\w-]+)\s*:\s*([^;]+);/g;
 
 export function extractWith(source: SourceRef, taxonomy: Taxonomy): RawValue[] {
   const out: RawValue[] = [];
-  for (const file of listCssFiles(source.root)) {
+  const files = source.only
+    ? source.only.filter((f) => f.endsWith('.css') && existsSync(f))
+    : listCssFiles(source.root);
+  for (const file of files) {
     const text = readFileSync(file, 'utf8');
     const rel = relative(source.root, file);
     const lines = text.split('\n');
