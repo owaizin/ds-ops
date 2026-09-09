@@ -5,6 +5,7 @@ import {
   nearDuplicatePaletteRule,
   semanticLiteralRule,
 } from './color.ts';
+import { semanticAppearanceNameRule, tierLeakageRule } from './tier.ts';
 import type { Rule, RuleTarget } from './types.ts';
 
 /**
@@ -15,8 +16,10 @@ import type { Rule, RuleTarget } from './types.ts';
  * rule id is `domain/kebab-slug` and is stable — scorecards key on it.
  */
 export const RULES: Rule[] = [
+  tierLeakageRule,
   semanticLiteralRule,
   literalDuplicateRule,
+  semanticAppearanceNameRule,
   nearDuplicatePaletteRule,
   mixedColorFormRule,
   colorKneeRule,

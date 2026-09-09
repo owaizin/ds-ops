@@ -14,6 +14,20 @@ The one-sentence thesis:
 > patterns. Systems before screens. Every design choice, every PR, and every
 > AI-generated output passes through the same gates.
 
+## Relationship to `design-system-ops` (Murphy Trueman)
+
+[`design-system-ops`](https://github.com/murphytrueman/design-system-ops) is a
+mature Claude Code skill pack covering the practitioner side of running a system —
+40 LLM-driven skills for auditing, governance, documentation, and stakeholder
+communication, plus 12 knowledge notes. This document does **not** re-derive that.
+For contribution workflows, deprecation process, decision records, adoption
+reporting, onboarding, and the maturity model, use that pack.
+
+ds-ops is the **deterministic layer** it does not have: math, not prompts —
+CIEDE2000 sweeps, tier-reference checks, provenance records, a calibration corpus.
+The token model, severity vocabulary, and `.ds-ops-config.yml` format here are
+kept compatible with that pack on purpose.
+
 ---
 
 ## The engagement, and which engine owns each phase
@@ -38,15 +52,26 @@ Palette   →   Semantic   →   Component   →   State
 (raw)         (role)         (part)          (interaction)
 ```
 
-Each layer references only the layer above it via `var()`. A semantic token
-holding a raw hex is a bug. A component reading a palette token directly is a bug.
-Both are grep-checkable.
+Each layer references only the layer above it via `var()`, **strictly downward**:
+component → semantic → primitive. A semantic token holding a raw hex is a bug
+(`color/semantic-holds-literal`). A component token referencing a primitive
+directly — skipping the semantic tier — is **tier leakage** (`token/tier-leakage`):
+the value is right but theme propagation and rebrand are broken. A semantic token
+named for its appearance (`color.action.blue`) is "a primitive with extra steps"
+(`token/semantic-name-describes-appearance`) — the exception is category /
+chart-series tokens, where the colour name is the identity.
+
+**Primitive** naming says *what it is* (`color.blue.500`); **semantic** says
+*what it is for* (`color.action.primary`); **component** scopes intent to a widget
+(`button.background.default`). Reserved from semantic names: colour names, size
+words (`small`/`large`), generic qualifiers (`main`/`base`).
 
 **One source of truth, two files, kept in lockstep.** Tokens live in a `.css`
-(the runtime) and a W3C design-tokens `.json` (`$value`, `$type`, `$extensions.css`
-— what every other tool reads: Figma sync, Style Dictionary, doc generators). A CI
-check diffs the two per namespace on every PR. They change together or neither
-changes.
+(the runtime) and a **DTCG 2025.10** `.json` (`$value`, `$type` from the 13 formal
+types, `$extensions.css` — what every other tool reads: Figma sync, Style
+Dictionary, doc generators; composite tokens need sub-value compliance, a resolver
+mode missing a value is a coverage gap). A CI check diffs the two per namespace on
+every PR. They change together or neither changes.
 
 **Naming grammar.** Colors: `--{ns}-color-{relationship}-{role}-{state}` where
 relationship ∈ `bg · text · border · icon`. Typography:

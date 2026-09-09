@@ -34,6 +34,23 @@ export type DsOpsConfig = {
      * This is a judgment call about the target's convention; override per source.
      */
     primitivePattern: string;
+    /**
+     * RegExp source (case-insensitive) matching a COMPONENT-tier token name
+     * (button.background, card.padding). Component tokens may reference only
+     * semantic tokens — never primitives, never upward.
+     */
+    componentPattern: string;
+    /**
+     * Token-name prefixes (after the namespace) that mark a token as living in
+     * the design system's semantic space rather than being an unknown var.
+     */
+    semanticNamespaces: string[];
+    /**
+     * Terms that must not appear in a SEMANTIC token name — a semantic token
+     * describing appearance (color.semantic.blue) is a primitive with extra
+     * steps. Colour names, size words, generic qualifiers.
+     */
+    reservedSemanticTerms: string[];
   };
   sweep: {
     min: number;

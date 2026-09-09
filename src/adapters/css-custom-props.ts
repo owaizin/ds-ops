@@ -50,26 +50,41 @@ export function extractWith(source: SourceRef, taxonomy: Taxonomy): RawValue[] {
       while ((m = DECL.exec(line)) !== null) {
         const tokenName = m[1];
         const value = m[2].trim();
-        if (value.startsWith('var(') || value.includes('var(')) continue;
-
         const selector = findSelector(lines, li);
+
+        const refs = [...value.matchAll(/var\(\s*(--[\w-]+)/g)].map((r) => r[1]!);
+        const base = {
+          file: rel,
+          line: li + 1,
+          selector,
+          property: tokenName,
+          tokenName,
+          fixtureSha: source.fixtureSha,
+          adapterId: ID,
+          adapterVersion: VERSION,
+        };
+
+        if (refs.length > 0) {
+          // a reference declaration — the raw value is one or more var() calls.
+          // kept (not skipped) so the tier rules can check reference direction.
+          out.push({
+            raw: value,
+            refs,
+            provenance: {
+              ...base,
+              classification: 'reference',
+              reason: `references ${refs.length} token(s): ${refs.join(', ')}`,
+            },
+          });
+          continue;
+        }
+
         const { classification, reason } = classify(tokenName, value, taxonomy);
         if (classification === 'excluded' && reason === 'not a color value') continue;
 
         out.push({
           raw: value,
-          provenance: {
-            file: rel,
-            line: li + 1,
-            selector,
-            property: tokenName,
-            tokenName,
-            classification,
-            reason,
-            fixtureSha: source.fixtureSha,
-            adapterId: ID,
-            adapterVersion: VERSION,
-          },
+          provenance: { ...base, classification, reason },
         });
       }
     }

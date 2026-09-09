@@ -17,15 +17,21 @@ files). Pointing the analyzer at a live repo path is planned; until then, snapsh
 the token files into a fixture so the run is reproducible and a calibration row is
 comparable.
 
-## The rule set (v0 — colour domain)
+## The rule set (v0)
 
 | Rule id | Severity | What it means |
 |---|---|---|
+| `token/tier-leakage` | high | A token references across tiers the wrong way — component → primitive skips the semantic tier, or a reference points upward. Value is right, theme propagation is broken. |
+| `token/semantic-name-describes-appearance` | medium / low | A semantic token named for a colour or size word (`color.action.blue`). Low when every hit is a category / chart-series token (sanctioned — record it in `DESIGN-SYSTEM.md`). |
 | `color/semantic-holds-literal` | high | A non-primitive token holds a literal colour instead of `var(--primitive)`. Breaks the layer model. |
 | `color/literal-duplicate-tokens` | medium | Two+ tokens declare byte-identical values. Usually a semantic layer re-typing a palette value instead of aliasing it. |
 | `color/near-duplicate-primitives` | low | Two palette primitives are within the configured ΔE — below a reliable just-noticeable difference. |
 | `color/mixed-storage-forms` | medium | Colour values stored in more than one form (hex + hsl-channels + rgb). Pick one convention. |
 | `color/no-intent-plateau` | low | No ΔE band holds a cluster count near the shipped primitive count. Hand-authored → ramp may be over-fine; generated scale → expected. |
+
+Severities are overridable per project via `.ds-ops-config.yml` (`severity:`
+block, Murphy Trueman `design-system-ops` format) — `tier_leakage: critical` maps
+`token/tier-leakage` to `blocking`.
 
 Each rule is `domain/kebab-slug`, stable, and scorecards key on it. `--target color`
 also runs the deeper `no-intent-plateau` check; `--target tokens` runs the

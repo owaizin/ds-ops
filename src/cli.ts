@@ -5,8 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { audit } from './commands/audit.ts';
 import { scan } from './commands/scan.ts';
 import { sweep } from './commands/sweep.ts';
-import { DEFAULT_CONFIG } from './config/defaults.ts';
-import type { DsOpsConfig } from './config/schema.ts';
+import { loadConfig } from './config/load.ts';
 import { KNOWN_TARGETS } from './rules/registry.ts';
 import type { RuleTarget } from './rules/types.ts';
 
@@ -34,16 +33,6 @@ ds-ops ${pkg.version} — audit, scaffold, and guardrail a design system from it
 A fixture-dir is a folder with a SOURCE.json and vendored token files.
 `;
 
-function loadConfig(path: string | undefined): DsOpsConfig {
-  if (!path) return DEFAULT_CONFIG;
-  const user = JSON.parse(readFileSync(path, 'utf8'));
-  return {
-    clustering: { ...DEFAULT_CONFIG.clustering, ...user.clustering },
-    taxonomy: { ...DEFAULT_CONFIG.taxonomy, ...user.taxonomy },
-    sweep: { ...DEFAULT_CONFIG.sweep, ...user.sweep },
-  };
-}
-
 function flag(argv: string[], name: string): string | undefined {
   const i = argv.indexOf(`--${name}`);
   return i >= 0 ? argv[i + 1] : undefined;
@@ -55,7 +44,8 @@ function has(argv: string[], name: string): boolean {
 
 function main(argv: string[]): void {
   const [cmd, ...rest] = argv;
-  const config = loadConfig(flag(rest, 'config'));
+  const loaded = loadConfig(flag(rest, 'config'));
+  const { config } = loaded;
   const positional = rest.filter((a, i) => !a.startsWith('--') && !rest[i - 1]?.startsWith('--'));
 
   switch (cmd) {
@@ -65,11 +55,13 @@ function main(argv: string[]): void {
       if (!KNOWN_TARGETS.includes(target)) {
         throw new Error(`unknown target '${target}'. one of: ${KNOWN_TARGETS.join(', ')}`);
       }
+      if (loaded.source !== 'defaults') console.log(`  config: ${loaded.source}`);
       const report = audit(positional[0], {
         target,
         json: has(rest, 'json'),
         outDir: flag(rest, 'out'),
         config,
+        severityOverrides: loaded.severityOverrides,
       });
       if (report.findings.length > 0) process.exitCode = 1;
       break;

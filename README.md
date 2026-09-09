@@ -42,10 +42,12 @@ node --experimental-strip-types src/cli.ts audit fixtures/radix-colors
 node --experimental-strip-types src/cli.ts sweep fixtures/radix-colors
 ```
 
-### The v0 rule set (colour domain)
+### The v0 rule set
 
 | rule | severity | catches |
 | --- | --- | --- |
+| `token/tier-leakage` | high | a token referencing the wrong tier — component → primitive skips, upward references. Breaks theme propagation. |
+| `token/semantic-name-describes-appearance` | medium / low | a semantic token named for a colour or size (`color.action.blue`) — a primitive with extra steps. Low when only category/chart tokens. |
 | `color/semantic-holds-literal` | high | a semantic token holding a literal instead of `var(--primitive)` |
 | `color/literal-duplicate-tokens` | medium | N tokens declaring byte-identical values (semantic layer re-typing the palette) |
 | `color/near-duplicate-primitives` | low | two primitives within one just-noticeable ΔE |
@@ -53,8 +55,20 @@ node --experimental-strip-types src/cli.ts sweep fixtures/radix-colors
 | `color/no-intent-plateau` | low | palette has no ΔE knee at the shipped count |
 
 Every rule is deterministic — no LLM, no network, no API key. Config is the
-mechanism/policy seam: `primitivePattern`, `shadowAlphaCeiling`, the ΔE cutoff all
-have uncalibrated defaults here.
+mechanism/policy seam: `primitivePattern`, `componentPattern`, `reservedSemanticTerms`,
+`shadowAlphaCeiling`, the ΔE cutoff all have uncalibrated defaults here.
+
+### Interop with `design-system-ops`
+
+[Murphy Trueman's `design-system-ops`](https://github.com/murphytrueman/design-system-ops)
+is a Claude Code skill pack — the practitioner brain: 40 LLM skills for governance,
+documentation, and communication around a live system. ds-ops is the deterministic
+instrument that pack lacks. They compose.
+
+ds-ops reads a `.ds-ops-config.yml` in that pack's format: the `system:` block
+seeds context, the `severity:` block maps onto ds-ops rule severities
+(`tier_leakage: critical` → `token/tier-leakage` at `blocking`). A team already
+running the skill pack points ds-ops at the same file.
 
 Example output (the healthy control fixture):
 

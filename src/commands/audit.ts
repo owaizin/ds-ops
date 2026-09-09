@@ -35,9 +35,16 @@ export type AuditReport = {
  */
 export function audit(
   fixtureDir: string,
-  opts: { target?: RuleTarget | 'all'; json?: boolean; outDir?: string; config?: DsOpsConfig } = {},
+  opts: {
+    target?: RuleTarget | 'all';
+    json?: boolean;
+    outDir?: string;
+    config?: DsOpsConfig;
+    severityOverrides?: Record<string, Finding['severity']>;
+  } = {},
 ): AuditReport {
   const config = opts.config ?? DEFAULT_CONFIG;
+  const overrides = opts.severityOverrides ?? {};
   const target = opts.target ?? 'all';
   const { meta, source } = loadFixture(fixtureDir);
   const adapter = ADAPTERS.find((a) => a.detect(source));
@@ -50,6 +57,7 @@ export function audit(
   const rules = rulesForTarget(target);
   const findings = rules
     .flatMap((r) => r.run(ctx))
+    .map((f) => (overrides[f.ruleId] ? { ...f, severity: overrides[f.ruleId]! } : f))
     .sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
 
   const distinctColors = new Set(colors.map((v) => v.raw.replace(/\s+/g, ' ').trim().toLowerCase())).size;

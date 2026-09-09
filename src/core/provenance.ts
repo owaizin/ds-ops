@@ -14,6 +14,7 @@
 export type ValueClassification =
   | 'color' // a real color the design system reasons about
   | 'shadow-internal' // a color that only exists as part of a shadow/elevation recipe
+  | 'reference' // the value is one or more var() calls — kept so tier rules can check direction
   | 'ambiguous' // could be a color, could not be — surfaced for a human
   | 'excluded'; // deliberately not a color (kept for auditability)
 
@@ -40,6 +41,8 @@ export type Provenance = {
 export type RawValue = {
   /** the value exactly as it appeared in source */
   raw: string;
+  /** when classification is `reference`: the token names this value points at, in order */
+  refs?: string[];
   provenance: Provenance;
 };
 
