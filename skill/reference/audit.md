@@ -28,6 +28,7 @@ comparable.
 | `color/near-duplicate-primitives` | low | Two palette primitives are within the configured ΔE — below a reliable just-noticeable difference. |
 | `color/mixed-storage-forms` | medium | Colour values stored in more than one form (hex + hsl-channels + rgb). Pick one convention. |
 | `color/no-intent-plateau` | low | No ΔE band holds a cluster count near the shipped primitive count. Hand-authored → ramp may be over-fine; generated scale → expected. |
+| `token/var-missing-fallback` | low | A `var(--token)` with no `, fallback`. If the token is ever undefined (import order, an unloaded token file, a dropped theme value) the property silently resolves to nothing. SLDS requires a fallback on every reference. A var() after a comma — itself a fallback — is not flagged. |
 
 Severities are overridable per project via `.ds-loop-config.yml` (`severity:`
 block, Murphy Trueman `design-system-ops` format) — `tier_leakage: critical` maps

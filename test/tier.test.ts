@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { DEFAULT_CONFIG } from '../src/config/defaults.ts';
 import { parseYamlLite } from '../src/config/yaml-lite.ts';
 import type { RawValue } from '../src/core/provenance.ts';
-import { classifyTier, tierLeakageRule } from '../src/rules/tier.ts';
+import { classifyTier, tierLeakageRule, varMissingFallbackRule } from '../src/rules/tier.ts';
 import type { RuleContext } from '../src/rules/types.ts';
 
 test('classifyTier: semantic namespace beats widget word', () => {
@@ -82,4 +82,33 @@ npm:
   assert.equal(y.system!.theming, true);
   assert.equal(y.severity!.tier_leakage, 'critical');
   assert.deepEqual(y.npm!.scoped_packages, []);
+});
+
+test('varMissingFallbackRule: flags var() without a comma-fallback', () => {
+  const v = (name: string, raw: string): RawValue => ({
+    raw,
+    refs: [...raw.matchAll(/var\(\s*(--[\w-]+)/g)].map((m) => m[1]!),
+    provenance: {
+      file: 't.css',
+      line: 1,
+      selector: ':root',
+      property: name,
+      tokenName: name,
+      classification: 'reference',
+      reason: 'test',
+      fixtureSha: 't',
+      adapterId: 't',
+      adapterVersion: '0',
+    },
+  });
+  const findings = varMissingFallbackRule.run(
+    ctx([
+      v('--a', 'var(--x)'), // flag
+      v('--b', 'var(--x, #fff)'), // ok — has fallback
+      v('--c', 'var(--x, var(--y))'), // ok — nested fallback
+      v('--d', 'var(--p) var(--q)'), // flag x2
+    ]),
+  );
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0]?.data?.count, 3);
 });

@@ -5,7 +5,7 @@ import {
   nearDuplicatePaletteRule,
   semanticLiteralRule,
 } from './color.ts';
-import { semanticAppearanceNameRule, tierLeakageRule } from './tier.ts';
+import { semanticAppearanceNameRule, tierLeakageRule, varMissingFallbackRule } from './tier.ts';
 import type { Rule, RuleTarget } from './types.ts';
 
 /**
@@ -20,6 +20,7 @@ export const RULES: Rule[] = [
   semanticLiteralRule,
   literalDuplicateRule,
   semanticAppearanceNameRule,
+  varMissingFallbackRule,
   nearDuplicatePaletteRule,
   mixedColorFormRule,
   colorKneeRule,

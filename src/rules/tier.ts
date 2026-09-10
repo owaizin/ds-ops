@@ -124,3 +124,53 @@ export const semanticAppearanceNameRule: Rule = {
     ];
   },
 };
+
+// var(--x) with nothing after the token name — no fallback. A var() WITH a
+// fallback has a comma before the ')', so this pattern can't match it.
+// ponytail: regex, not a CSS parser. The "no fallback" shape is unambiguous;
+// deeply nested fallback chains it doesn't need to understand.
+const VAR_NO_FALLBACK = /var\(\s*(--[\w-]+)\s*\)/g;
+
+/**
+ * A `var(--token)` reference with no fallback. If the token is ever undefined —
+ * wrong import order, a consumer that didn't load the token file, a theme that
+ * dropped a mode-specific value — the property silently resolves to nothing.
+ * Salesforce SLDS requires a fallback on every reference for exactly this.
+ * https://raw.githubusercontent.com/salesforce-ux/design-system-2-starter-kit/HEAD/.builderrules
+ */
+export const varMissingFallbackRule: Rule = {
+  id: 'token/var-missing-fallback',
+  title: 'var() reference has no fallback value',
+  targets: ['tokens', 'color', 'spacing', 'typography', 'elevation', 'motion'],
+  run(ctx: RuleContext): Finding[] {
+    const hits: { token: string; ref: string; where: string }[] = [];
+    for (const v of ctx.values) {
+      if (v.provenance.classification !== 'reference') continue;
+      for (const m of v.raw.matchAll(VAR_NO_FALLBACK)) {
+        // a var() sitting after a comma is itself a fallback — the author already
+        // gave the outer reference a fallback path, don't nag about the leaf.
+        const before = v.raw.slice(0, m.index).trimEnd();
+        if (before.endsWith(',')) continue;
+        hits.push({
+          token: v.provenance.tokenName ?? '(inline)',
+          ref: m[1]!,
+          where: `${v.provenance.file}:${v.provenance.line}`,
+        });
+      }
+    }
+    if (hits.length === 0) return [];
+    return [
+      {
+        ruleId: this.id,
+        severity: 'low',
+        summary: `${hits.length} var() reference(s) have no fallback value`,
+        where: hits
+          .slice(0, 8)
+          .map((h) => `${h.token}: var(${h.ref}) at ${h.where}`)
+          .join('; '),
+        fix: 'Add a fallback: var(--token, <value>) — the base-theme value, so a missing token degrades to something sane instead of nothing.',
+        data: { count: hits.length, hits: hits.slice(0, 40) },
+      },
+    ];
+  },
+};

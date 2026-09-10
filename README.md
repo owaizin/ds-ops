@@ -69,6 +69,7 @@ entry; every other hook, permission, and setting is left alone.
 | `color/near-duplicate-primitives` | low | two primitives within one just-noticeable ΔE |
 | `color/mixed-storage-forms` | medium | hex + hsl-channels + rgb in one source |
 | `color/no-intent-plateau` | low | palette has no ΔE knee at the shipped count |
+| `token/var-missing-fallback` | low | a `var(--token)` reference with no fallback — resolves to nothing if the token is ever undefined (SLDS requires one) |
 
 Every rule is deterministic — no LLM, no network, no API key. Config is the
 mechanism/policy seam: `primitivePattern`, `componentPattern`, `reservedSemanticTerms`,
