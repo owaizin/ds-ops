@@ -14,6 +14,7 @@
     { "name": "shape", "category": "Review", "impl": "skill", "status": "spec", "target": true },
     { "name": "review", "category": "Review", "impl": "skill", "status": "spec", "target": true },
     { "name": "guard", "category": "Guard", "impl": "engine", "status": "partial", "target": false },
+    { "name": "fix", "category": "Guard", "impl": "engine", "status": "partial", "target": true },
     { "name": "scorecard", "category": "Guard", "impl": "engine", "status": "partial", "target": false },
     { "name": "doctor", "category": "Meta", "impl": "engine", "status": "planned", "target": false }
   ],

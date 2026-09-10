@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { audit } from './commands/audit.ts';
+import { fix } from './commands/fix.ts';
 import { guard } from './commands/guard.ts';
 import { scan } from './commands/scan.ts';
 import { sweep } from './commands/sweep.ts';
@@ -32,6 +33,11 @@ ds-loop ${pkg.version} — audit, scaffold, and guardrail a design system from i
       Install / remove a PostToolUse hook in ./.claude/settings.json that runs
       \`ds-loop audit\` on the file after any Edit/Write to a style file and
       surfaces high-severity findings. Preserves other hooks.
+
+  ds-loop fix <path> [--write]
+      Apply the mechanical fixes only — where the correct edit is provable from
+      the code. v0: inserts a fallback into \`var(--x)\` using the literal value
+      of --x. Dry run unless --write.
 `;
 
 function flag(argv: string[], name: string): string | undefined {
@@ -97,6 +103,11 @@ function main(argv: string[]): void {
         throw new Error(`guard needs one of: on, off, status`);
       }
       guard(action as 'on' | 'off' | 'status');
+      break;
+    }
+    case 'fix': {
+      if (!positional[0]) throw new Error('fix needs a path');
+      fix(positional[0], { write: has(rest, 'write'), config });
       break;
     }
     case undefined:

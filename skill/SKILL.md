@@ -56,6 +56,7 @@ per namespace on every PR. They change together or neither changes.
 | `shape <component>` | Review | Phase 0 design-intent interrogation before a new component | [reference/shape.md](reference/shape.md) |
 | `review <component>` | Review | Full component audit — API caps, token hygiene, story structure, a11y, MDX | [reference/review.md](reference/review.md) |
 | `guard [on\|off\|status]` | Guard | Install/manage CI + pre-commit enforcement. Deterministic checks block; judgment checks comment | [reference/guard.md](reference/guard.md) |
+| `fix [target] [--write]` | Guard | Apply the mechanical fixes only — where the edit is provable from the code, no LLM. v0: inserts a `var()` fallback from the target token's literal. Dry run unless `--write`. | — |
 | `scorecard` | Guard | Append the ratio timeseries to `.ds-scorecard/history.jsonl` (emitted from CI on main) | [reference/scorecard.md](reference/scorecard.md) |
 | `doctor` | Meta | Drift between `DESIGN-SYSTEM.md`, the token files, config, and the guard hook | [reference/doctor.md](reference/doctor.md) |
 

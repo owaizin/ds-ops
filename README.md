@@ -37,7 +37,14 @@ ds-loop audit <path> [--target color|tokens|…] [--json] [--files a,b] [--since
 ds-loop sweep <path> [--out <dir>]     the ΔE cutoff sweep — full curve
 ds-loop scan  <path>                   quick look: taxonomy breakdown + clusters
 ds-loop guard <on|off|status>          install/remove the edit-time hook (below)
+ds-loop fix   <path> [--write]         apply the mechanical fixes only (Execute step)
 ```
+
+`fix` is the loop's "Execute" step (MAPE-K): it applies **only** the edits that
+are provable from the code — no LLM, no judgement. v0 does one: `var(--x)` →
+`var(--x, <literal value of --x>)`. Identical behaviour when `--x` is defined,
+strictly safer when it isn't. Dry run unless `--write`. Everything else `audit`
+finds is for a human (or a coding agent) to fix.
 
 Runs on Node ≥ 22.6 with no build step (`--experimental-strip-types`). The
 `/ds-loop` skill and its playbooks live in [`skill/`](skill/SKILL.md); the launcher
