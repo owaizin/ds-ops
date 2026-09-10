@@ -64,7 +64,8 @@ entry; every other hook, permission, and setting is left alone.
 | --- | --- | --- |
 | `token/tier-leakage` | high | a token referencing the wrong tier — component → primitive skips, upward references. Breaks theme propagation. |
 | `token/semantic-name-describes-appearance` | medium / low | a semantic token named for a colour or size (`color.action.blue`) — a primitive with extra steps. Low when only category/chart tokens. |
-| `color/semantic-holds-literal` | high | a semantic token holding a literal instead of `var(--primitive)` |
+| `color/semantic-holds-literal` | high | a semantic token holding a literal colour instead of `var(--primitive)` |
+| `token/raw-dimension-in-semantic` | high | a semantic or component token holds a raw `16px` / `1rem` instead of a spacing / type primitive (Fluent rule 1) |
 | `color/literal-duplicate-tokens` | medium | N tokens declaring byte-identical values (semantic layer re-typing the palette) |
 | `color/near-duplicate-primitives` | low | two primitives within one just-noticeable ΔE |
 | `color/mixed-storage-forms` | medium | hex + hsl-channels + rgb in one source |

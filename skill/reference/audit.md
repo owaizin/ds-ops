@@ -24,6 +24,7 @@ comparable.
 | `token/tier-leakage` | high | A token references across tiers the wrong way — component → primitive skips the semantic tier, or a reference points upward. Value is right, theme propagation is broken. |
 | `token/semantic-name-describes-appearance` | medium / low | A semantic token named for a colour or size word (`color.action.blue`). Low when every hit is a category / chart-series token (sanctioned — record it in `DESIGN-SYSTEM.md`). |
 | `color/semantic-holds-literal` | high | A non-primitive token holds a literal colour instead of `var(--primitive)`. Breaks the layer model. |
+| `token/raw-dimension-in-semantic` | high | A semantic or component token holds a raw length (`16px`, `1rem`, a shorthand) instead of `var(--space-N)`. The other half of `semantic-holds-literal`. Skips primitives, font-weight / z-index / opacity scales, and shadow recipe parts. Bare unitless numbers are not treated as dimensions. |
 | `color/literal-duplicate-tokens` | medium | Two+ tokens declare byte-identical values. Usually a semantic layer re-typing a palette value instead of aliasing it. |
 | `color/near-duplicate-primitives` | low | Two palette primitives are within the configured ΔE — below a reliable just-noticeable difference. |
 | `color/mixed-storage-forms` | medium | Colour values stored in more than one form (hex + hsl-channels + rgb). Pick one convention. |

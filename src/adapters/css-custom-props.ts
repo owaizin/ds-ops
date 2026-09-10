@@ -110,7 +110,16 @@ function classify(
   const shadowByName = taxonomy.shadowTokenHints.some((h) => name.includes(h));
 
   if (!isColor) {
-    // a bare number triple with % is an HSL channel color; anything else is not
+    // a spacing / sizing / typography literal: `16px`, `1rem`, `0.5em`, a
+    // `12px 16px` shorthand. Must carry a length unit — a bare number is too
+    // ambiguous (z-index, bezier point, font-weight, opacity, flex-grow) to
+    // treat as a design dimension.
+    if (/^-?\d*\.?\d+(px|rem|em|vh|vw)(\s+-?\d*\.?\d+(px|rem|em|vh|vw)){0,3}$/.test(value)) {
+      // a shadow / elevation recipe part (offset, blur, spread) is an internal,
+      // not a token that should reference a spacing primitive.
+      if (shadowByName) return { classification: 'shadow-internal', reason: 'shadow recipe part' };
+      return { classification: 'dimension', reason: 'raw length literal' };
+    }
     return { classification: 'excluded', reason: 'not a color value' };
   }
 

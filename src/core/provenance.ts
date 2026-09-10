@@ -13,6 +13,7 @@
 
 export type ValueClassification =
   | 'color' // a real color the design system reasons about
+  | 'dimension' // a raw length or number: 16px, 1rem, 600, a shorthand
   | 'shadow-internal' // a color that only exists as part of a shadow/elevation recipe
   | 'reference' // the value is one or more var() calls — kept so tier rules can check direction
   | 'ambiguous' // could be a color, could not be — surfaced for a human

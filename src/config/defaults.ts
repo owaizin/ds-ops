@@ -20,8 +20,10 @@ export const DEFAULT_CONFIG: DsOpsConfig = {
     shadowAlphaCeiling: 0.25,
     nonColorTokenHints: ['gradient', 'backdrop', 'scrim-opacity'],
     // `raw`/`palette`/`scale`/`ref` anywhere, OR a trailing numeric scale step
-    // (--slate-500, --amber-9). Covers Tailwind, Radix, and Cone conventions.
-    primitivePattern: '(^|-)(raw|palette|scale|ref)(-|$)|-\\d{1,4}$',
+    // (--slate-500, --amber-9), OR a trailing named scale step
+    // (--font-size-xs, --line-height-tight, --radius-full). Tailwind, Radix, Cone.
+    primitivePattern:
+      '(^|-)(raw|palette|scale|ref)(-|$)|-\\d{1,4}$|-(xs|sm|md|lg|xl|xxs|xxl|2xl|3xl|4xl|base|none|full|tight|snug|normal|relaxed|loose)$',
     // a token named for a widget right after the --ns- prefix (--cue-button-bg).
     // checked AFTER the semantic-namespace test, so --cue-color-bg-skeleton stays semantic.
     componentPattern:
