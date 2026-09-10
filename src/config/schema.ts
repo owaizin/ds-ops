@@ -1,9 +1,9 @@
 /**
  * The config object is the mechanism/policy seam.
  *
- * ds-ops (this repo) is policy-free mechanism. Every tuned number lives here as a
+ * ds-loop (this repo) is policy-free mechanism. Every tuned number lives here as a
  * field with an UNCALIBRATED default. The calibrated values live in the private
- * `ds-ops-calibration` repo and are passed in at run time. Nothing in `src/`
+ * `ds-loop-calibration` repo and are passed in at run time. Nothing in `src/`
  * outside this file may hardcode a threshold — if it does, the seam has leaked.
  *
  * The taxonomy hints below are the one place an opinion is baked into the open
@@ -16,7 +16,7 @@ export type DsOpsConfig = {
     /**
      * CIEDE2000 ΔE below which two colors are treated as the same design intent.
      * This single number decides whether a palette has 7 greys or 11.
-     * UNCALIBRATED default — see ds-ops-calibration for tuned values per source.
+     * UNCALIBRATED default — see ds-loop-calibration for tuned values per source.
      */
     deltaE: number;
   };

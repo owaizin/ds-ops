@@ -1,23 +1,23 @@
 ---
-name: ds-ops
-description: Use when the user wants to audit, build, or guardrail a design SYSTEM (not a single screen) — token layers, component libraries, Storybook structure, contribution governance. Covers token audits, drift detection, component inventory and de-duplication, the primitive→semantic→component→state layer model, the two-file token source of truth (CSS + W3C JSON), Storybook taxonomy and the 5-file component contract, API-surface restraint caps, accessibility baselines, migration lanes, branch-scope governance, and CI guardrails that stop entropy after the design-system team leaves. Also use for standing up a design system from zero, or for a Phase-0 interrogation before adding a new component. NOT for per-screen visual polish, taste, motion, or anti-slop on an individual page — that is impeccable's domain; ds-ops is the system behind the screens.
+name: ds-loop
+description: Use when the user wants to audit, build, or guardrail a design SYSTEM (not a single screen) — token layers, component libraries, Storybook structure, contribution governance. Covers token audits, drift detection, component inventory and de-duplication, the primitive→semantic→component→state layer model, the two-file token source of truth (CSS + W3C JSON), Storybook taxonomy and the 5-file component contract, API-surface restraint caps, accessibility baselines, migration lanes, branch-scope governance, and CI guardrails that stop entropy after the design-system team leaves. Also use for standing up a design system from zero, or for a Phase-0 interrogation before adding a new component. NOT for per-screen visual polish, taste, motion, or anti-slop on an individual page — that is impeccable's domain; ds-loop is the system behind the screens.
 metadata:
   version: 0.1.0
 ---
 
-ds-ops treats a design system as **a decision framework that happens to ship
+ds-loop treats a design system as **a decision framework that happens to ship
 components**, not a component library. Its job is to remove decisions — every rule
 here is a deterministic check, a scaffold, or a question the author answers, never
 a reviewer's memory.
 
-Scope line: **impeccable operates on screens; ds-ops operates on the system behind
-them.** A shop runs impeccable to make a surface good and ds-ops to make sure a
+Scope line: **impeccable operates on screens; ds-loop operates on the system behind
+them.** A shop runs impeccable to make a surface good and ds-loop to make sure a
 system exists and does not rot. If the request is "make this page look better",
 hand it to impeccable.
 
 ## Setup
 
-1. Run `<skill-base-dir>/bin/ds-ops context` once per session (keep cwd at the
+1. Run `<skill-base-dir>/bin/ds-loop context` once per session (keep cwd at the
    user's project). It loads `DESIGN-SYSTEM.md`, the tuned config if one is
    present, and reports what is stale. Do not rerun it.
 2. Load the request's playbook from the Commands table below. If no command is
@@ -35,7 +35,7 @@ Palette   →   Semantic   →   Component   →   State
 
 Each layer references only the layer above it, via `var()`. A semantic token
 holding a raw literal is a bug. A component reading a palette token directly is a
-bug. Both are grep-checkable and both are ds-ops rules.
+bug. Both are grep-checkable and both are ds-loop rules.
 
 Two files, one source of truth: `tokens.css` (the runtime) and `tokens.json`
 (W3C design-tokens format — what every other tool reads). A CI check diffs them

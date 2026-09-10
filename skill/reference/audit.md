@@ -6,7 +6,7 @@ present a severity-ranked report. `audit` documents; it does not fix.
 ## Run it
 
 ```bash
-<skill-base-dir>/bin/ds-ops audit <fixture-or-source> --target <target> --json
+<skill-base-dir>/bin/ds-loop audit <fixture-or-source> --target <target> --json
 ```
 
 Targets: `all` (default), `tokens`, `color`, `spacing`, `typography`, `elevation`,
@@ -29,7 +29,7 @@ comparable.
 | `color/mixed-storage-forms` | medium | Colour values stored in more than one form (hex + hsl-channels + rgb). Pick one convention. |
 | `color/no-intent-plateau` | low | No ΔE band holds a cluster count near the shipped primitive count. Hand-authored → ramp may be over-fine; generated scale → expected. |
 
-Severities are overridable per project via `.ds-ops-config.yml` (`severity:`
+Severities are overridable per project via `.ds-loop-config.yml` (`severity:`
 block, Murphy Trueman `design-system-ops` format) — `tier_leakage: critical` maps
 `token/tier-leakage` to `blocking`.
 

@@ -13,7 +13,7 @@ const ADAPTERS: Adapter[] = [cssCustomPropsAdapter];
 
 export type AuditReport = {
   manifest: {
-    tool: 'ds-ops';
+    tool: 'ds-loop';
     command: 'audit';
     target: string;
     fixtureLabel: string;
@@ -86,7 +86,7 @@ export function audit(
 
   const report: AuditReport = {
     manifest: {
-      tool: 'ds-ops',
+      tool: 'ds-loop',
       command: 'audit',
       target: ruleTarget,
       fixtureLabel: meta.label,
@@ -119,7 +119,7 @@ export function audit(
 function emptyReport(target: string, meta: { label: string; fixtureSha: string }): AuditReport {
   return {
     manifest: {
-      tool: 'ds-ops',
+      tool: 'ds-loop',
       command: 'audit',
       target,
       fixtureLabel: meta.label,
@@ -138,7 +138,7 @@ function emptyReport(target: string, meta: { label: string; fixtureSha: string }
 function printReport(r: AuditReport, opts: { live: boolean } = { live: false }): void {
   const { manifest: m } = r;
   const scope = opts.live ? 'live scan' : 'fixture';
-  console.log(`\n  ds-ops audit — ${m.fixtureLabel}  ·  target: ${m.target}  ·  ${scope}`);
+  console.log(`\n  ds-loop audit — ${m.fixtureLabel}  ·  target: ${m.target}  ·  ${scope}`);
   console.log(`  version ${m.fixtureSha}   adapter ${m.adapter}   config ${m.configHash}`);
   console.log(`  ${r.rulesRun.length} rules run\n`);
 

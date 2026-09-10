@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 /**
  * `guard on` installs a PostToolUse hook in the project's .claude/settings.json.
- * After any Edit/Write to a style file, the hook runs `ds-ops audit` scoped to
+ * After any Edit/Write to a style file, the hook runs `ds-loop audit` scoped to
  * that file and surfaces high-severity findings back to the agent. Other hooks
  * in the file are left untouched.
  *
@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
  */
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const HOOK_SCRIPT = join(REPO_ROOT, 'skill', 'hooks', 'ds-ops-guard.mjs');
+const HOOK_SCRIPT = join(REPO_ROOT, 'skill', 'hooks', 'ds-loop-guard.mjs');
 const HOOK_COMMAND = `node ${JSON.stringify(HOOK_SCRIPT)}`;
 const MATCHER = 'Edit|Write|MultiEdit';
 
@@ -36,7 +36,7 @@ function readSettings(): Settings {
 }
 
 function isOurs(h: HookEntry): boolean {
-  return h.command.includes('ds-ops-guard.mjs');
+  return h.command.includes('ds-loop-guard.mjs');
 }
 
 export function guard(action: 'on' | 'off' | 'status'): void {
@@ -46,7 +46,7 @@ export function guard(action: 'on' | 'off' | 'status'): void {
   const installed = postToolUse.some((m) => m.hooks?.some(isOurs));
 
   if (action === 'status') {
-    console.log(`\n  ds-ops guard`);
+    console.log(`\n  ds-loop guard`);
     console.log(`  settings: ${p}${existsSync(p) ? '' : ' (does not exist yet)'}`);
     console.log(`  installed: ${installed ? 'yes' : 'no'}`);
     if (installed) console.log(`  hook: ${HOOK_COMMAND}`);
@@ -56,7 +56,7 @@ export function guard(action: 'on' | 'off' | 'status'): void {
 
   if (action === 'off') {
     if (!installed) {
-      console.log('  ds-ops guard: not installed, nothing to remove.');
+      console.log('  ds-loop guard: not installed, nothing to remove.');
       return;
     }
     const cleaned = postToolUse
@@ -65,20 +65,20 @@ export function guard(action: 'on' | 'off' | 'status'): void {
     settings.hooks = { ...settings.hooks, PostToolUse: cleaned };
     if (cleaned.length === 0) delete settings.hooks.PostToolUse;
     write(settings);
-    console.log('  ds-ops guard: removed. Other hooks left in place.');
+    console.log('  ds-loop guard: removed. Other hooks left in place.');
     return;
   }
 
   // action === 'on'
   if (installed) {
-    console.log('  ds-ops guard: already installed. `guard off` to remove.');
+    console.log('  ds-loop guard: already installed. `guard off` to remove.');
     return;
   }
   const entry: Matcher = { matcher: MATCHER, hooks: [{ type: 'command', command: HOOK_COMMAND }] };
   settings.hooks = { ...settings.hooks, PostToolUse: [...postToolUse, entry] };
   write(settings);
-  console.log(`\n  ds-ops guard: installed in ${p}`);
-  console.log(`  After any Edit/Write to a .css file, ds-ops audits that file and`);
+  console.log(`\n  ds-loop guard: installed in ${p}`);
+  console.log(`  After any Edit/Write to a .css file, ds-loop audits that file and`);
   console.log(`  reports high-severity findings. It never blocks the edit.`);
   console.log(`  Restart the agent session for the hook to take effect.\n`);
 }

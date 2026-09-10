@@ -14,23 +14,23 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(HERE, '..', 'package.json'), 'utf8'));
 
 const USAGE = `
-ds-ops ${pkg.version} — audit, scaffold, and guardrail a design system from its code
+ds-loop ${pkg.version} — audit, scaffold, and guardrail a design system from its code
 
-  ds-ops audit <path> [--target ${KNOWN_TARGETS.join('|')}] [--json] [--out <dir>]
+  ds-loop audit <path> [--target ${KNOWN_TARGETS.join('|')}] [--json] [--out <dir>]
                       [--files <a,b>] [--since <ref>] [--min-severity <sev>] [--quiet] [--config <file>]
       Run every deterministic rule against <path>. <path> is a fixture dir
       (has SOURCE.json) or any dir / .css file (live scan of the working tree).
       --files / --since narrow to changed files. Exit 1 on any surviving finding.
 
-  ds-ops sweep <path> [--out <dir>] [--config <file>]
+  ds-loop sweep <path> [--out <dir>] [--config <file>]
       Sweep the CIEDE2000 ΔE cutoff across the configured range. Full curve.
 
-  ds-ops scan  <path> [--config <file>]
+  ds-loop scan  <path> [--config <file>]
       Quick look: taxonomy breakdown + palette clusters at the default ΔE.
 
-  ds-ops guard <on|off|status>
+  ds-loop guard <on|off|status>
       Install / remove a PostToolUse hook in ./.claude/settings.json that runs
-      \`ds-ops audit\` on the file after any Edit/Write to a style file and
+      \`ds-loop audit\` on the file after any Edit/Write to a style file and
       surfaces high-severity findings. Preserves other hooks.
 `;
 

@@ -6,10 +6,11 @@ import type { DsOpsConfig } from './schema.ts';
 import { parseYamlLite } from './yaml-lite.ts';
 
 /**
- * ds-ops reads its own JSON config, and — for interop — a
- * `.ds-ops-config.yml` in the Murphy Trueman `design-system-ops` format. A team
- * already running that skill pack points ds-ops at the same file: the `system:`
- * block seeds context, the `severity:` block maps onto ds-ops rule severities.
+ * ds-loop reads its own config, and — for interop — a `.ds-ops-config.yml` in
+ * the Murphy Trueman `design-system-ops` format (that filename is his, kept
+ * verbatim so a team already running his skill pack points ds-loop at the same
+ * file): the `system:` block seeds context, the `severity:` block maps onto
+ * ds-loop rule severities.
  */
 
 const MURPHY_SEVERITY_TO_RULES: Record<string, string[]> = {
@@ -44,7 +45,13 @@ export function loadConfig(explicitPath: string | undefined, cwd = process.cwd()
     };
   }
 
-  for (const name of ['.ds-ops-config.yml', '.ds-ops-config.yaml', 'ds-ops.config.json']) {
+  for (const name of [
+    '.ds-loop-config.yml',
+    '.ds-loop-config.yaml',
+    'ds-loop.config.json',
+    '.ds-ops-config.yml', // Murphy Trueman design-system-ops interop
+    '.ds-ops-config.yaml',
+  ]) {
     const p = join(cwd, name);
     if (!existsSync(p)) continue;
     const text = readFileSync(p, 'utf8');

@@ -3,13 +3,13 @@
 `audit` against a committed baseline. Same rule set, diff mode: report only what
 regressed since the baseline was captured.
 
-Status: **planned.** Needs a baseline format (`.ds-ops/baseline.json`) and a diff
+Status: **planned.** Needs a baseline format (`.ds-loop/baseline.json`) and a diff
 of finding sets keyed on `ruleId` + `where`.
 
 ## Intended shape
 
 ```bash
-<skill-base-dir>/bin/ds-ops drift <source> --baseline .ds-ops/baseline.json
+<skill-base-dir>/bin/ds-loop drift <source> --baseline .ds-loop/baseline.json
 ```
 
 - New finding not in the baseline → **regression**, reported.

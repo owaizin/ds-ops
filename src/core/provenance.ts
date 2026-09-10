@@ -1,5 +1,5 @@
 /**
- * Provenance is the spine of ds-ops. Every value the analyzer touches carries a
+ * Provenance is the spine of ds-loop. Every value the analyzer touches carries a
  * full record of where it came from and why it was classified the way it was.
  *
  * Calibration rows are only comparable across runs if a delta can be attributed
@@ -47,7 +47,7 @@ export type RawValue = {
 };
 
 export type RunManifest = {
-  tool: 'ds-ops';
+  tool: 'ds-loop';
   toolVersion: string;
   command: string;
   fixtureLabel: string;

@@ -1,5 +1,5 @@
 /**
- * A dependency-free reader for the small YAML subset a ds-ops config uses:
+ * A dependency-free reader for the small YAML subset a ds-loop config uses:
  * nested maps by 2-space indent, `key: scalar`, `key:` map headers, `#` comments,
  * quoted/unquoted strings, true/false/null, numbers, and inline `[]` lists.
  *

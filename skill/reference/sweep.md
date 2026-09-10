@@ -5,7 +5,7 @@ range; emit the full curve — including where it does not stabilise, because th
 is what tells you whether ΔE is a sane merge metric for this palette.
 
 ```bash
-<skill-base-dir>/bin/ds-ops sweep <fixture> --out <dir>
+<skill-base-dir>/bin/ds-loop sweep <fixture> --out <dir>
 ```
 
 `--out` writes `<label>.sweep.json` + `.md` — a calibration row.

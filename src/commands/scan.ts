@@ -33,7 +33,7 @@ export function scan(fixtureDir: string, config: DsOpsConfig = DEFAULT_CONFIG): 
   }));
   const clusters = clusterByDeltaE(points, config.clustering.deltaE);
 
-  console.log(`\n  ds-ops scan — ${meta.label}`);
+  console.log(`\n  ds-loop scan — ${meta.label}`);
   console.log(
     `  fixture ${meta.fixtureSha}   adapter ${adapter.id}@${adapter.version}   config ${hashConfig(config)}\n`,
   );
@@ -60,7 +60,7 @@ export function scan(fixtureDir: string, config: DsOpsConfig = DEFAULT_CONFIG): 
       `    humans shipped ${meta.shippedPrimitiveCount} primitives  (machine ${delta >= 0 ? '+' : ''}${delta})`,
     );
   }
-  console.log('    run `ds-ops sweep` to find the ΔE where the cluster count matches intent.\n');
+  console.log('    run `ds-loop sweep` to find the ΔE where the cluster count matches intent.\n');
 }
 
 function groupBy<T>(xs: T[], key: (x: T) => string): Record<string, T[]> {

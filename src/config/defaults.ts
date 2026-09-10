@@ -4,8 +4,8 @@ import type { DsOpsConfig } from './schema.ts';
  * UNCALIBRATED defaults.
  *
  * These are deliberately neutral starting points, not recommendations. The whole
- * premise of ds-ops is that the right ΔE cutoff is discovered per-source by the
- * `sweep` command, then recorded in ds-ops-calibration. Running `scan` with these
+ * premise of ds-loop is that the right ΔE cutoff is discovered per-source by the
+ * `sweep` command, then recorded in ds-loop-calibration. Running `scan` with these
  * defaults tells you the shape of the data, not the answer.
  *
  * ΔE 2.3 is the classic "just noticeable difference" figure. It is here because

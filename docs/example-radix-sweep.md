@@ -1,4 +1,4 @@
-# ds-ops sweep — Radix Colors
+# ds-loop sweep — Radix Colors
 
 - fixture: `npm:@radix-ui/colors@3.0.0`
 - adapter: `css-custom-props@0.1.0`

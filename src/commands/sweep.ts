@@ -14,7 +14,7 @@ export type SweepPoint = { deltaE: number; clusters: number };
 export type Plateau = { from: number; to: number; clusters: number; width: number };
 export type SweepResult = {
   manifest: {
-    tool: 'ds-ops';
+    tool: 'ds-loop';
     command: 'sweep';
     fixtureLabel: string;
     fixtureSha: string;
@@ -72,7 +72,7 @@ export function sweep(fixtureDir: string, opts: { outDir?: string; config?: DsOp
 
   const result: SweepResult = {
     manifest: {
-      tool: 'ds-ops',
+      tool: 'ds-loop',
       command: 'sweep',
       fixtureLabel: meta.label,
       fixtureSha: meta.fixtureSha,
@@ -104,7 +104,7 @@ export function sweep(fixtureDir: string, opts: { outDir?: string; config?: DsOp
 }
 
 function printReport(r: SweepResult): void {
-  console.log(`\n  ds-ops sweep — ${r.manifest.fixtureLabel}`);
+  console.log(`\n  ds-loop sweep — ${r.manifest.fixtureLabel}`);
   console.log(
     `  fixture ${r.manifest.fixtureSha}   adapter ${r.manifest.adapter}   config ${r.manifest.configHash}\n`,
   );
@@ -148,7 +148,7 @@ function markdown(r: SweepResult): string {
         .join('\n')
     : '  - none';
   return [
-    `# ds-ops sweep — ${r.manifest.fixtureLabel}`,
+    `# ds-loop sweep — ${r.manifest.fixtureLabel}`,
     '',
     `- fixture: \`${r.manifest.fixtureSha}\``,
     `- adapter: \`${r.manifest.adapter}\``,

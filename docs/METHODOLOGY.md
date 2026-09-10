@@ -1,6 +1,6 @@
-# The methodology ds-ops automates
+# The methodology ds-loop automates
 
-> This is the seed spec. Every engine and skill in `ds-ops` exists to execute one
+> This is the seed spec. Every engine and skill in `ds-loop` exists to execute one
 > step of the engagement below with less human time and no drift. Distilled from
 > **CUE** (Cone Universal Experience), a code-first design system for a dense
 > multi-product SaaS, cross-checked against Polaris, Primer, Spectrum, Carbon, ADS.
@@ -23,16 +23,16 @@ communication, plus 12 knowledge notes. This document does **not** re-derive tha
 For contribution workflows, deprecation process, decision records, adoption
 reporting, onboarding, and the maturity model, use that pack.
 
-ds-ops is the **deterministic layer** it does not have: math, not prompts —
+ds-loop is the **deterministic layer** it does not have: math, not prompts —
 CIEDE2000 sweeps, tier-reference checks, provenance records, a calibration corpus.
-The token model, severity vocabulary, and `.ds-ops-config.yml` format here are
+The token model, severity vocabulary, and `.ds-loop-config.yml` format here are
 kept compatible with that pack on purpose.
 
 ---
 
 ## The engagement, and which engine owns each phase
 
-| Phase | Human work | ds-ops engine / mode |
+| Phase | Human work | ds-loop engine / mode |
 | --- | --- | --- |
 | 1. Discovery | interview + repo scan → `DS-CONTEXT` (YAML frontmatter every downstream skill branches on, prose underneath) | analyzer `scan` (repo facts) |
 | 2. Token audit | every hardcoded color/space/type/shadow → proposed primitive+semantic scale + drift report | **analyzer `sweep` / `scan`** ← v0 |

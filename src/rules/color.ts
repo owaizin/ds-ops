@@ -190,7 +190,7 @@ export const colorKneeRule: Rule = {
         severity: 'low',
         summary: `no ΔE band holds a cluster count within 15% of the ${shipped} shipped primitives`,
         where: `swept ΔE ${min}–${max}`,
-        fix: 'If this is a hand-authored palette, the missing plateau means adjacent entries are closer than one JND — review whether the ramp is over-fine. If it is a generated scale, that is expected. Run `ds-ops sweep` for the full curve.',
+        fix: 'If this is a hand-authored palette, the missing plateau means adjacent entries are closer than one JND — review whether the ramp is over-fine. If it is a generated scale, that is expected. Run `ds-loop sweep` for the full curve.',
         data: { shipped, plateauFrom, plateauTo },
       },
     ];

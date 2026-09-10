@@ -3,7 +3,7 @@
 Pull a repeated pattern out of consumer code and into the system as a proper
 5-file component, then migrate the call sites.
 
-Status: **planned.** Overlaps impeccable's `extract`; ds-ops's version is
+Status: **planned.** Overlaps impeccable's `extract`; ds-loop's version is
 system-structure-first (it produces the 5 files and wires the registry), not
 taste-first.
 

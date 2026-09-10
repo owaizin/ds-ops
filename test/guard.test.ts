@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import { guard } from '../src/commands/guard.ts';
 
 function inDir<T>(fn: () => T): T {
-  const dir = mkdtempSync(join(tmpdir(), 'ds-ops-guard-'));
+  const dir = mkdtempSync(join(tmpdir(), 'ds-loop-guard-'));
   const prev = process.cwd();
   process.chdir(dir);
   try {
@@ -33,7 +33,7 @@ test('guard on/off preserves other hooks and settings', () => {
     assert.equal(s.hooks.PostToolUse.length, 2);
     assert.ok(
       s.hooks.PostToolUse.some((m: { hooks: { command: string }[] }) =>
-        m.hooks.some((h) => h.command.includes('ds-ops-guard.mjs')),
+        m.hooks.some((h) => h.command.includes('ds-loop-guard.mjs')),
       ),
     );
     assert.deepEqual(s.permissions.allow, ['Read']);
@@ -52,7 +52,7 @@ test('guard on is idempotent', () => {
     guard('on');
     const s = JSON.parse(readFileSync('.claude/settings.json', 'utf8'));
     const ours = s.hooks.PostToolUse.filter((m: { hooks: { command: string }[] }) =>
-      m.hooks.some((h) => h.command.includes('ds-ops-guard.mjs')),
+      m.hooks.some((h) => h.command.includes('ds-loop-guard.mjs')),
     );
     assert.equal(ours.length, 1);
   });

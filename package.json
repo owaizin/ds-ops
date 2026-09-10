@@ -1,10 +1,10 @@
 {
-  "name": "ds-ops",
+  "name": "ds-loop",
   "version": "0.1.0",
   "description": "design-system-ops — audit, scaffold, and guardrail a design system from its code",
   "type": "module",
   "bin": {
-    "ds-ops": "./src/cli.ts"
+    "ds-loop": "./src/cli.ts"
   },
   "exports": {
     ".": "./src/index.ts"
@@ -14,7 +14,7 @@
     "node": ">=22.6"
   },
   "scripts": {
-    "ds-ops": "node --experimental-strip-types src/cli.ts",
+    "ds-loop": "node --experimental-strip-types src/cli.ts",
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "type-check": "tsc --noEmit",
@@ -25,7 +25,7 @@
   "author": "owaizin",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/owaizin/ds-ops.git"
+    "url": "git+https://github.com/owaizin/ds-loop.git"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

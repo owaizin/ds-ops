@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * ds-ops guard hook (PostToolUse).
+ * ds-loop guard hook (PostToolUse).
  *
  * Reads the Claude Code hook payload from stdin, and if the edited file is a
- * style file, runs `ds-ops audit` scoped to that one file. High-severity
+ * style file, runs `ds-loop audit` scoped to that one file. High-severity
  * findings are printed to stderr with exit code 2 so the agent sees them as
  * feedback. Anything below `high`, or a clean result, exits 0 silently — the
  * hook must be quiet on every ordinary save.
@@ -68,6 +68,6 @@ const lines = findings.map(
   (f) => `  • [${String(f.severity).toUpperCase()}] ${f.summary}\n    ${f.where}\n    fix: ${f.fix}`,
 );
 process.stderr.write(
-  `ds-ops guard — the edit to ${filePath.split('/').pop()} introduced ${findings.length} design-system issue(s):\n\n${lines.join('\n\n')}\n`,
+  `ds-loop guard — the edit to ${filePath.split('/').pop()} introduced ${findings.length} design-system issue(s):\n\n${lines.join('\n\n')}\n`,
 );
 process.exit(2);

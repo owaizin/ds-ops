@@ -1,5 +1,5 @@
 {
-  "skill": "ds-ops",
+  "skill": "ds-loop",
   "version": "0.1.0",
   "categories": ["Discover", "Audit", "Build", "Guard", "Meta"],
   "commands": [

@@ -1,6 +1,6 @@
 # routing
 
-Shown when `/ds-ops` is invoked with no command. Present the menu; never auto-run.
+Shown when `/ds-loop` is invoked with no command. Present the menu; never auto-run.
 
 ## Menu
 
@@ -29,4 +29,4 @@ Shown when `/ds-ops` is invoked with no command. Present the menu; never auto-ru
 - Request is "audit our tokens" / "is our colour system a mess" → `audit`.
 - Request is "we have no design system" → `discover`, then `census`, then a plan.
 - Request is "stop people breaking the tokens" → `guard on`.
-- Request is per-screen visual quality → not ds-ops. Hand to impeccable.
+- Request is per-screen visual quality → not ds-loop. Hand to impeccable.

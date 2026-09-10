@@ -1,11 +1,13 @@
-# ds-ops
+# ds-loop
 
-**design-system-ops** — audit, scaffold, and guardrail a design system from its code.
+**Design-system linter for the AI era.** `ds` = design system; `loop` = the
+edit → check → fix → re-check cycle. Reads a design system's code and points at
+what drifted — deterministically, no LLM.
 
 An agency walks into a product with no design system, or a failing one. They do a
 token audit, take a component census, stand up a Storybook, migrate one surface to
 prove it, then install the guardrails that keep entropy from winning after they
-leave. `ds-ops` is that engagement as tooling: a small set of engines with a
+leave. `ds-loop` is that engagement as tooling: a small set of engines with a
 one-shot mode (the audit) and a watch mode (the guard), plus the skills that carry
 the judgment.
 
@@ -14,12 +16,12 @@ lives in a config object with an uncalibrated default; the calibrated values and
 the corpus behind them live in a separate private repo and are passed in at run
 time. See [_The leaky seam_](#the-leaky-seam).
 
-Scope line: **impeccable operates on screens; ds-ops operates on the system behind
-them.** Hand a page that needs taste to impeccable; ds-ops is the token layer, the
+Scope line: **impeccable operates on screens; ds-loop operates on the system behind
+them.** Hand a page that needs taste to impeccable; ds-loop is the token layer, the
 component contract, the governance.
 
 Status: **v0** — the deterministic colour-domain audit, the ΔE sweep, live-tree
-scanning, and the edit-time guard hook work end to end. The `/ds-ops` skill
+scanning, and the edit-time guard hook work end to end. The `/ds-loop` skill
 (14 commands, 5 categories) is specced; most engines are scaffolding.
 
 ---
@@ -27,19 +29,19 @@ scanning, and the edit-time guard hook work end to end. The `/ds-ops` skill
 ## What's here in v0
 
 ```
-ds-ops audit <path> [--target color|tokens|…] [--json] [--files a,b] [--since <ref>] [--min-severity high] [--quiet]
+ds-loop audit <path> [--target color|tokens|…] [--json] [--files a,b] [--since <ref>] [--min-severity high] [--quiet]
     Deterministic rule set, severity-ranked, exit 1 on any surviving finding.
     <path> is a fixture dir (SOURCE.json) OR any dir / .css file — a live scan
     of the working tree. --files / --since narrow to changed files.
 
-ds-ops sweep <path> [--out <dir>]     the ΔE cutoff sweep — full curve
-ds-ops scan  <path>                   quick look: taxonomy breakdown + clusters
-ds-ops guard <on|off|status>          install/remove the edit-time hook (below)
+ds-loop sweep <path> [--out <dir>]     the ΔE cutoff sweep — full curve
+ds-loop scan  <path>                   quick look: taxonomy breakdown + clusters
+ds-loop guard <on|off|status>          install/remove the edit-time hook (below)
 ```
 
 Runs on Node ≥ 22.6 with no build step (`--experimental-strip-types`). The
-`/ds-ops` skill and its playbooks live in [`skill/`](skill/SKILL.md); the launcher
-at `skill/bin/ds-ops` wraps the CLI.
+`/ds-loop` skill and its playbooks live in [`skill/`](skill/SKILL.md); the launcher
+at `skill/bin/ds-loop` wraps the CLI.
 
 ```bash
 npm install
@@ -49,11 +51,11 @@ node --experimental-strip-types src/cli.ts audit ../some-app/src         # a liv
 
 ### `guard` — nag on edit, like impeccable's hook
 
-`ds-ops guard on` writes a `PostToolUse` hook into `./.claude/settings.json`.
-After any `Edit`/`Write` to a `.css` file, ds-ops audits that one file and, if
+`ds-loop guard on` writes a `PostToolUse` hook into `./.claude/settings.json`.
+After any `Edit`/`Write` to a `.css` file, ds-loop audits that one file and, if
 there are `high`+ findings, prints them to stderr (exit 2) so the coding agent
 sees them. Silent on a clean save, silent on non-style files. **Never blocks** —
-a PostToolUse hook fires after the write. `guard off` removes only the ds-ops
+a PostToolUse hook fires after the write. `guard off` removes only the ds-loop
 entry; every other hook, permission, and setting is left alone.
 
 ### The v0 rule set
@@ -76,13 +78,14 @@ mechanism/policy seam: `primitivePattern`, `componentPattern`, `reservedSemantic
 
 [Murphy Trueman's `design-system-ops`](https://github.com/murphytrueman/design-system-ops)
 is a Claude Code skill pack — the practitioner brain: 40 LLM skills for governance,
-documentation, and communication around a live system. ds-ops is the deterministic
+documentation, and communication around a live system. ds-loop is the deterministic
 instrument that pack lacks. They compose.
 
-ds-ops reads a `.ds-ops-config.yml` in that pack's format: the `system:` block
-seeds context, the `severity:` block maps onto ds-ops rule severities
-(`tier_leakage: critical` → `token/tier-leakage` at `blocking`). A team already
-running the skill pack points ds-ops at the same file.
+ds-loop reads his `.ds-ops-config.yml` verbatim (that filename is his, kept as-is
+for interop): the `system:` block seeds context, the `severity:` block maps onto
+ds-loop rule severities (`tier_leakage: critical` → `token/tier-leakage` at
+`blocking`). A team already running his skill pack points ds-loop at the same
+file. ds-loop's own config is `.ds-loop-config.yml` / `ds-loop.config.json`.
 
 Example output (the healthy control fixture):
 
